@@ -91,3 +91,7 @@ Prénom + e-mail « liberty » (en minuscules) = partie de l'équipe Liberty Rid
 - Site public : https://emmanuelpetit-commits.github.io/green-master/ (GitHub Pages, dépôt emmanuelpetit-commits/green-master, branche main). Chaque modification poussée sur main met le site à jour en une minute environ.
 - Appli installable (PWA) : manifest.webmanifest, icônes assets/pwa/, service worker sw.js qui met tout le jeu en cache (fonctionne hors ligne une fois chargé). Sur iPhone : Partager → Sur l'écran d'accueil ; sur Android : Installer l'application. À chaque nouvelle version, changer le nom du cache dans sw.js.
 - Google Sheet « Green Master – Stand Lyon » (onglets Parties et Config) + script Apps Script apps-script/Code.gs déployé en application web. L'URL /exec se colle dans le menu dev, onglet « Google Sheet ». Connecté, le jeu envoie chaque partie dans le Sheet (file d'attente locale si le réseau coupe) et lit cadeaux, QR code, règlement et classements depuis l'onglet Config.
+
+## Déploiement Apps Script (v31)
+
+Script « Green Master - Stand Lyon » déployé en application web (version 1, accès « Tout le monde », exécuté avec le compte du propriétaire du Sheet). Son URL /exec est en dur dans CONFIG.sheetUrl : le jeu est connecté au Sheet partout (site, appli, artefact) sans rien configurer. Pour changer de Sheet ou de script, coller une autre URL dans le menu dev, onglet « Google Sheet » (prioritaire sur la valeur en dur). Fuseau du Sheet : Europe/Paris.
