@@ -344,7 +344,7 @@ const roadWidth=2000,segLen=200,rumbleLen=3,lanes=3;
 const fov=100,camH=1000,camDepth=1/Math.tan((fov/2)*Math.PI/180);
 const drawDist=300,fogDensity=5;
 const playerZ=camH*camDepth;
-const maxSpeed=segLen*60;
+const maxSpeed=segLen*60*(matchMedia('(pointer:coarse)').matches?0.78:1);   // sur téléphone, 22 % moins vite : plus de temps pour voir les dangers
 const accel=maxSpeed/4,braking=-maxSpeed,decel=-maxSpeed/5,offDecel=-maxSpeed/2,offLimit=maxSpeed/4,centrifugal=0.2;
 const UNIT_M=0.00556;
 const BIKE_W=0.115,BIKE_COL=0.16,CAR_COL=0.32;
@@ -568,7 +568,7 @@ function updateHazards(dt){
   for(const h of hazards){
     const rel=relSeg(h.seg,ps);
     if(!h.passed&&rel<-14){h.passed=true;if(!h.reported){h.missed=true;P.missed++;msg('Danger non signalé : '+HAZ[h.type].label,'#ff7043',26);}}
-    if(!P.hinted&&rel>0&&rel<170){P.hinted=true;msg('Un danger approche : ESPACE pour le signaler','#ffffff',26);}
+    if(!P.hinted&&rel>0&&rel<170){P.hinted=true;msg(TOUCH?'Un danger approche : bouton rouge pour le signaler':'Un danger approche : ESPACE pour le signaler','#ffffff',26);}
     if(!h.crossed&&rel<=0){h.crossed=true;if(sp<0.5&&!P.crashed){P.prudent++;P.points+=10;msg('Passage prudent +10','#F5B72B',24);}}
     if(h.type==='animal'){
       if(h.animState==='wait'&&rel>0&&rel<170){h.animState='cross';h.animX=-2.0;}
@@ -1235,9 +1235,13 @@ function makeHazardObject(h){
   const g=new THREE.Group();
   const flat=(rx,rz,mat,y)=>{const m=new THREE.Mesh(new THREE.CircleGeometry(1,28),mat);m.rotation.x=-Math.PI/2;m.scale.set(rx,rz,1);m.position.y=y||0.03;m.receiveShadow=true;return m;};
   switch(h.type){
-    case 'puddle':g.add(flat(5.2,3.4,new THREE.MeshStandardMaterial({color:0x9fc8f0,transparent:true,opacity:0.72,roughness:0.12,metalness:0,emissive:0x1d3f66,emissiveIntensity:0.6})));break;
-    case 'oil':g.add(flat(4.4,2.9,new THREE.MeshStandardMaterial({color:0x14101c,transparent:true,opacity:0.95,roughness:0.05,metalness:0.4,emissive:0x2a1048,emissiveIntensity:0.5})));break;
-    case 'pothole':g.add(flat(2.2,1.7,new THREE.MeshStandardMaterial({color:0x3a3a3a,roughness:1}),0.02));g.add(flat(1.7,1.25,new THREE.MeshStandardMaterial({color:0x0a0a0a,roughness:1}),0.03));break;
+    case 'puddle':g.add(flat(5.8,3.8,new THREE.MeshStandardMaterial({color:0x4F9FEF,transparent:true,opacity:0.9}),0.03));g.add(flat(3.2,1.6,new THREE.MeshStandardMaterial({color:0xBFE6FF,transparent:true,opacity:0.6}),0.04));break;
+    case 'oil':{ // nappe de pétrole : plusieurs lobes noirs, liseré sombre, reflet
+      const ink=new THREE.MeshStandardMaterial({color:0x050507}),rim=new THREE.MeshStandardMaterial({color:0x26222e});
+      for(const [x,z,rx,rz] of [[0,0,3.4,2.2],[2.2,-0.9,2.2,1.5],[-2.1,0.8,2.0,1.4],[0.6,1.8,1.6,1.0]]){const r=flat(rx+0.25,rz+0.25,rim,0.025);r.position.x=x;r.position.z=z;g.add(r);}
+      for(const [x,z,rx,rz] of [[0,0,3.4,2.2],[2.2,-0.9,2.2,1.5],[-2.1,0.8,2.0,1.4],[0.6,1.8,1.6,1.0]]){const b=flat(rx,rz,ink,0.035);b.position.x=x;b.position.z=z;g.add(b);}
+      const hi=flat(1.3,0.45,new THREE.MeshStandardMaterial({color:0x3b3650}),0.045);hi.position.set(-0.6,0,-0.5);hi.rotation.z=0.3;g.add(hi);break;}
+    case 'pothole':g.add(flat(3.0,2.3,new THREE.MeshStandardMaterial({color:0x2a2a2a}),0.02));g.add(flat(2.3,1.7,new THREE.MeshStandardMaterial({color:0x050505}),0.03));break;
     case 'gravel':{const m=new THREE.Mesh(new THREE.PlaneGeometry(HW*1.9,h.len*SEG_M),new THREE.MeshStandardMaterial({map:gravelTexture(),transparent:true,roughness:1}));m.rotation.x=-Math.PI/2;m.position.set(0,0.025,-h.len*SEG_M/2);g.add(m);break;}
     case 'works':{for(let i=0;i<7;i++){const c=MODELS['car-cone'].clone();c.scale.setScalar(1.9);c.position.set((i%2?1:-1)*0.55,0,-i*1.5);g.add(c);}const sign=makeSignBoard('TRAVAUX','#ff7a00');sign.scale.setScalar(1.5);sign.position.set(0,0,2.5);g.add(sign);break;}
     case 'debris':{for(let i=0;i<5;i++){const b=new THREE.Mesh(new THREE.BoxGeometry(0.8+R()*0.6,0.3,0.4+R()*0.6),new THREE.MeshStandardMaterial({color:0x5a3b1e,roughness:1}));b.position.set((R()-0.5)*1.6,0.11,(R()-0.5)*1.6);b.rotation.y=R()*3;b.castShadow=true;g.add(b);}break;}
@@ -1468,7 +1472,7 @@ function render3D(){
   // dangers
   const psNow=Math.floor((position+playerZ)/segLen)%segments.length;
   for(const h of hazards){
-    if(!h.obj){h.obj=toonify(makeHazardObject(h),{angle:35});scene.add(h.obj);h.marker=new THREE.Sprite(markerMat(h.type,'community'));h.marker.scale.set(2.4,2.4,1);h.marker.visible=false;scene.add(h.marker);}
+    if(!h.obj){h.obj=toonify(makeHazardObject(h),{angle:35});if(TOUCH&&['puddle','oil','pothole','debris'].includes(h.type))h.obj.scale.set(1.3,1,1.3);scene.add(h.obj);h.marker=new THREE.Sprite(markerMat(h.type,'community'));h.marker.scale.set(2.4,2.4,1);h.marker.visible=false;scene.add(h.marker);}
     const dz=wrapDelta(h.seg*segLen-position);const k=(dz+zOff)/segLen;
     if(k<0.6||k>=drawDist-2){h.obj.visible=false;h.marker.visible=false;continue;}
     const n=Math.floor(k),pct=k-n;
@@ -1520,7 +1524,7 @@ function render3D(){
   const fov=54+12*sp;if(Math.abs(camera.fov-fov)>0.05){camera.fov=fov;camera.updateProjectionMatrix();}
   sky.position.copy(camera.position);mountains.position.set(camera.position.x,camera.position.y-30,camera.position.z);
   mountains.rotation.y=hillOff*Math.PI*2*0.5;
-  for(const c of clouds){const a=c.userData.ang+hillOff*Math.PI*2*0.5+frame*0.00015;c.position.set(camera.position.x+Math.cos(a)*c.userData.r,camera.position.y+c.userData.h,camera.position.z+Math.sin(a)*c.userData.r);}
+  for(const c of clouds){const a=c.userData.ang+frame*0.00015;c.position.set(camera.position.x+Math.cos(a)*c.userData.r,camera.position.y+c.userData.h,camera.position.z+Math.sin(a)*c.userData.r);}
   sunDisc.position.copy(camera.position).add(_v.copy(SUN_DIR).multiplyScalar(1000));sunDisc.lookAt(camera.position);
   sun.target.position.set(camera.position.x,playerY,-25);
   sun.position.copy(sun.target.position).add(_v.copy(SUN_DIR).multiplyScalar(90));

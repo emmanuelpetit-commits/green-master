@@ -103,3 +103,9 @@ Prénom + e-mail « invité » (ou « invite ») = partie d'invité : pas d'e-ma
 ## Mobile (v33)
 
 Les écrans (accueil, résultats, roue, tuto, menu dev) occupent tout l'écran du téléphone, en portrait comme en paysage, sans débordement horizontal. En portrait pendant la course, un écran « Tourne ton téléphone » s'affiche sur tactile. Sur tactile, les textes parlent du bouton rouge et du joystick au lieu d'ESPACE et des flèches. Mise en page compacte sous 460 px de haut (téléphone en paysage) et cartes empilées sous 520 px de large.
+
+## Lisibilité des dangers, nuages (v34)
+
+- Nuages fixes par rapport au regard : ils ne tournent plus avec la route dans les virages (seules les collines gardent la parallaxe).
+- Sur tactile : vitesse maximale réduite de 22 % (l'affichage reste sur 85 km/h, les rivaux ralentissent d'autant) et flaques, huile, nids-de-poule et débris agrandis de 30 %.
+- Partout : les taches d'huile sont de vraies nappes de pétrole noires à plusieurs lobes avec liseré et reflet ; flaques plus bleues et opaques, nids-de-poule plus grands.
