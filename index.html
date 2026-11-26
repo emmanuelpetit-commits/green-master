@@ -200,10 +200,10 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 .tb.report span{font:700 11px var(--titre);line-height:1.1;text-align:center}
 .tb.report.hold{background:var(--feu);color:#fff}
 /* écran d'alerte chute Liberty Rider */
-#fall{position:fixed;inset:0;z-index:65;display:none;background:radial-gradient(120% 90% at 50% 10%,#F26A4E 0%,#E84C2E 45%,#B9331A 100%);color:#fff;font-family:var(--corps);overflow:hidden}
+#fall{position:fixed;inset:0;z-index:65;display:none;background:linear-gradient(180deg,rgba(36,33,33,.55) 0%,rgba(36,33,33,.25) 45%,rgba(36,33,33,0) 70%);color:#fff;font-family:var(--corps);overflow:hidden}
 #fall.on{display:block}
 @keyframes fallin{from{opacity:0}to{opacity:1}}
-#fall .top{position:absolute;left:0;right:0;top:clamp(8px,3vh,36px);text-align:center;padding:0 16px}
+#fall .top{position:absolute;left:50%;transform:translateX(-50%);top:clamp(8px,3vh,36px);text-align:center;padding:clamp(10px,2vh,18px) clamp(14px,3vw,28px);width:min(94vw,720px);background:rgba(36,33,33,.72);border-radius:24px;backdrop-filter:blur(6px)}
 #fall .ico{width:clamp(54px,9vmin,84px);height:clamp(54px,9vmin,84px);border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;animation:pulse 1s ease-in-out infinite;box-shadow:0 0 0 0 rgba(255,255,255,.5)}
 #fall .ico img{width:60%;height:60%}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.55)}70%{box-shadow:0 0 0 22px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
@@ -217,15 +217,20 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 #fall .big.red{background:#B9331A}
 #fall .bar{width:min(70vw,420px);height:8px;border-radius:999px;background:rgba(255,255,255,.3);margin:14px auto 0;overflow:hidden}
 #fall .bar i{display:block;height:100%;width:0;background:#fff;border-radius:999px}
-#fall .lib{position:absolute;left:clamp(8px,4vw,60px);bottom:clamp(8px,6vh,60px);width:clamp(150px,32vmin,340px)}
-#fall .road{position:absolute;left:0;right:0;bottom:0;height:clamp(40px,9vh,80px);background:#242121}
-#fall .road:before{content:'';position:absolute;left:0;right:0;top:45%;height:6px;background:repeating-linear-gradient(90deg,#fff 0 40px,transparent 40px 80px);opacity:.8}
-#fall .amb{position:absolute;right:-60%;bottom:clamp(30px,7vh,64px);width:clamp(200px,38vmin,420px);animation:ambin 1.5s cubic-bezier(.2,.8,.3,1) forwards}
+#fall .lib{position:absolute;left:clamp(8px,4vw,70px);bottom:clamp(6px,3vh,30px);width:clamp(130px,30vmin,300px);filter:drop-shadow(0 10px 18px rgba(0,0,0,.35));animation:libin .6s cubic-bezier(.2,1.3,.4,1)}
+@keyframes libin{from{transform:translateY(40px) scale(.7);opacity:0}to{transform:none;opacity:1}}
+#fall .road{display:none}
+#fall .amb{position:absolute;right:-60%;bottom:clamp(10px,4vh,40px);width:clamp(220px,44vmin,520px);animation:ambin 1.5s cubic-bezier(.2,.8,.3,1) forwards;filter:drop-shadow(0 10px 18px rgba(0,0,0,.35))}
+#fall .amb img{width:100%;height:auto;display:block}
+#fall .amb .gl{position:absolute;top:1%;width:12%;height:12%;border-radius:50%;pointer-events:none;mix-blend-mode:screen}
+#fall .amb .gl.r{left:47%;background:radial-gradient(circle,rgba(255,60,40,1) 0%,rgba(255,60,40,.5) 40%,rgba(255,60,40,0) 70%);animation:flash .28s steps(1) infinite}
+#fall .amb .gl.b{left:62%;background:radial-gradient(circle,rgba(80,140,255,1) 0%,rgba(80,140,255,.5) 40%,rgba(80,140,255,0) 70%);animation:flash .28s steps(1) infinite;animation-delay:.14s}
+#fall .amb .gl.w{left:40%;width:34%;height:16%;top:-2%;border-radius:50%;background:radial-gradient(ellipse,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 70%);animation:flash .28s steps(1) infinite}
 @keyframes ambin{from{right:-60%}to{right:6%}}
 #fall .amb .wheel{transform-origin:center;animation:spin .35s linear infinite}
 @keyframes spin{to{transform:rotate(-360deg)}}
 #fall .amb .light{animation:flash .3s steps(1) infinite}
-@keyframes flash{50%{opacity:.25}}
+@keyframes flash{50%{opacity:0}}
 #fall .amb .light.b{animation-delay:.15s}
 #fall .brand{position:absolute;right:16px;top:14px;width:clamp(90px,14vw,160px);margin:0}
 @media (max-width:520px){#fall .lib{width:120px;left:4px}#fall .amb{width:180px}#fall .btns{flex-direction:column;gap:8px}#fall .big{padding:10px}}
@@ -249,21 +254,9 @@ button.pill.light{background:#fff;color:var(--anthracite)}
     <p class="cd">Les secours et tes proches seront prévenus dans <b id="fallCount">3</b> s</p>
     <div class="btns"><button class="big green" id="fallOk">Je vais bien</button><button class="big red" id="fallHelp">J'ai besoin d'aide</button></div>
     <div class="bar"><i id="fallBar"></i></div></div>
-  <img class="lib" src="assets/brand/gm/liberto-assistance.svg" alt="">
+  <img class="lib" id="fallLib" src="assets/brand/gm/liberto-urgentiste.png" alt="">
   <div class="road"></div>
-  <svg class="amb" viewBox="0 0 420 220" aria-hidden="true">
-    <g stroke="#242121" stroke-width="7" stroke-linejoin="round">
-      <rect x="140" y="28" width="60" height="22" rx="8" fill="#4383E7" class="light"/><rect x="200" y="28" width="60" height="22" rx="8" fill="#E84C2E" class="light b"/>
-      <path d="M30 150 V95 q0-14 14-14 h80 l30-38 q6-8 18-8 h150 q22 0 22 22 v93 z" fill="#FBFBF7"/>
-      <path d="M124 81 l30-38 h60 v38 z" fill="#4383E7"/><rect x="226" y="43" width="64" height="38" rx="4" fill="#4383E7"/>
-      <rect x="30" y="112" width="314" height="20" fill="#E84C2E" stroke="none"/>
-      <rect x="296" y="86" width="22" height="66" fill="#E84C2E" stroke="none"/><rect x="274" y="108" width="66" height="22" fill="#E84C2E" stroke="none"/>
-      <rect x="30" y="150" width="314" height="18" rx="6" fill="#242121"/>
-      <circle cx="100" cy="166" r="30" fill="#242121"/><circle cx="100" cy="166" r="13" fill="#FBFBF7" class="wheel"/><path d="M100 153 v26 M87 166 h26" stroke="#242121" stroke-width="4" class="wheel"/>
-      <circle cx="280" cy="166" r="30" fill="#242121"/><circle cx="280" cy="166" r="13" fill="#FBFBF7"/><path d="M280 153 v26 M267 166 h26" stroke="#242121" stroke-width="4"/>
-      <rect x="338" y="100" width="20" height="26" rx="6" fill="#F5B72B"/>
-    </g>
-  </svg>
+  <div class="amb"><img src="assets/brand/gm/ambulance.png" alt=""><i class="gl w"></i><i class="gl r"></i><i class="gl b"></i></div>
 </div>
 <div id="rotate"><div class="ph"></div><b>Tourne ton téléphone</b><span>Green Master se joue en paysage.</span></div>
 <div id="wrap"><div id="stage">
@@ -768,12 +761,12 @@ function wipeout(reason){
   msg(reason,'#ff5a1f',56);sfx('skid');sfx('crash');
   // alerte Liberty Rider : la course est figée pendant l'écran (rivaux, chrono), puis le pilote repart comme s'il s'était relevé direct
   fallPrev=P.speed;fallT=FALL_DUR;fallHelp=false;P.speed=0;
-  const f=document.getElementById('fall');f.classList.add('on');f.classList.remove('help');document.getElementById('fallBar').style.width='0%';document.getElementById('fallCount').textContent=Math.ceil(FALL_DUR);document.getElementById('fallText').textContent='Liberty Rider a détecté une chute. Tout va bien ?';
+  hud.style.visibility='hidden';touch.style.visibility='hidden';const f=document.getElementById('fall');f.classList.add('on');f.classList.remove('help');document.getElementById('fallBar').style.width='0%';document.getElementById('fallCount').textContent=Math.ceil(FALL_DUR);document.getElementById('fallText').textContent='Liberty Rider a détecté une chute. Tout va bien ?';
   const a=f.querySelector('.amb');a.style.animation='none';void a.offsetWidth;a.style.animation='';
   setTimeout(()=>sfx('siren'),250);
 }
 function endFall(){
-  fallT=0;document.getElementById('fall').classList.remove('on');document.getElementById('fallCount').parentElement.style.visibility='';
+  fallT=0;hud.style.visibility='';touch.style.visibility='';document.getElementById('fall').classList.remove('on');document.getElementById('fallCount').parentElement.style.visibility='';
   P.crashed=false;P.crashT=0;P.hp=100;P.x=clamp(P.x,-0.8,0.8);P.lean=0;P.shake=0;P.hitFlash=0;P.speed=fallPrev*0.55;
 }
 function knockdown(r,dir,credit,text){
@@ -1900,7 +1893,7 @@ function backToTitle(){adminEl.classList.add('hidden');if(state!=='race'&&state!
 function goHome(){
   state='title';msgs=[];keys.left=keys.right=keys.up=keys.down=false;keys.steer=null;
   for(const id of ['result','wheel','admin','tuto'])document.getElementById(id).classList.add('hidden');
-  document.getElementById('homeBtn').classList.add('hidden');confCv.style.display='none';document.getElementById('rotate').classList.remove('on');fallT=0;document.getElementById('fall').classList.remove('on');
+  document.getElementById('homeBtn').classList.add('hidden');confCv.style.display='none';document.getElementById('rotate').classList.remove('on');fallT=0;hud.style.visibility='';document.getElementById('fall').classList.remove('on');
   demoMode=false;teamMode=false;guestMode=false;document.getElementById('demoBtn').classList.remove('on');
   document.getElementById('playerName').value='';document.getElementById('playerEmail').value='';document.getElementById('cMarketing').checked=false;document.getElementById('formErr').style.display='none';
   titleEl.classList.remove('hidden');syncRemote();

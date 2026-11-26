@@ -121,3 +121,10 @@ L'écran de chute reprend le principe de l'app : titre « Alerte accident », co
 ## Mise à jour immédiate (v37)
 
 Le service worker sert désormais la page index.html en « réseau d'abord » (cache seulement hors ligne) : une nouvelle version publiée est visible dès le chargement suivant, sans double rechargement. Les autres fichiers restent en cache versionné.
+
+## Alerte accident sur le décor, ambulance Superdriver, Liberto urgentiste (v39)
+
+- L'écran d'alerte ne masque plus la scène : le décor 3D figé reste visible derrière un panneau sombre translucide (titre, compte à rebours, boutons).
+- Ambulance : illustration cartoon des captures Store du Figma « [INTERNAL] - RENAULT Superdriver » (calque image, exportée en 3x, remise à l'endroit et détourée) : assets/brand/gm/ambulance.png. Gyrophares et rampe lumineuse clignotent (halos CSS superposés).
+- Liberto urgentiste : illustration générée (ElevenLabs, modèle gemini-3-pro-image) à partir de l'illustration officielle de Liberto et de l'ambulance en références ; variante retenue : assets/brand/gm/liberto-urgentiste.png, variante de secours : liberto-urgentiste-2.png. Référence utilisée : assets/brand/gm/liberto-ref.png.
+- Pendant l'alerte, le HUD et les commandes tactiles sont masqués.
