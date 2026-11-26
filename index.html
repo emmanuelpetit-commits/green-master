@@ -589,8 +589,8 @@ const TOUCH=matchMedia('(pointer:coarse)').matches;
 let position=0,ents=[],rivals=[],msgs=[];
 const P={x:0,speed:0,hp:100,crashed:false,crashT:0,crashDir:1,attackCd:0,anim:null,animT:0,animDir:1,dist:0,hitFlash:0,shake:0,knockdowns:0,crashes:0,time:0,lean:0,bounce:0};
 
-let wheelState={rot:0,spinning:false,done:false,result:-1,lastIdx:-1},lastEntry=null;
-function reset(){wheelState={rot:0,spinning:false,done:false,result:-1,lastIdx:-1};
+let wheelState={rot:0,spinning:false,done:false,result:-1,lastIdx:-1},lastEntry=null,resultShown=false;
+function reset(){wheelState={rot:0,spinning:false,done:false,result:-1,lastIdx:-1};resultShown=false;
   clearEntityObjects();position=0;ents=[];rivals=[];msgs=[];
   Object.assign(P,{x:0,speed:0,hp:100,crashed:false,crashT:0,attackCd:0,anim:null,animT:0,dist:0,hitFlash:0,shake:0,knockdowns:0,crashes:0,time:0,lean:0,reports:0,confirms:0,falseReports:0,missed:0,reportCd:0,reportFlash:0,points:0,antic:0,prudent:0,bumps:0,contacts:0,contactCd:0,offT:0,offroad:0,hinted:false,timeBonus:0,flooz:0});
   for(let i=0;i<34;i++){
@@ -870,7 +870,7 @@ function update(dt){
     P.timeBonus=Math.max(0,150-Math.round(P.time*0.6));P.points+=P.timeBonus;if(P.timeBonus>0)msg('Bonus efficacité +'+P.timeBonus+' pts','#F5B72B',30);
     msg('Trajet terminé','#ffffff',60);sfx('finish');
   }
-  if(state==='finished'){resultT-=dt;if(resultT<=0&&document.getElementById('result').classList.contains('hidden'))showResult();}
+  if(state==='finished'){resultT-=dt;if(resultT<=0&&!resultShown)showResult();}
 }
 
 /* ---------- 2D HUD helpers ---------- */
@@ -1621,7 +1621,7 @@ const BOARD_KEY='gm_board_v1';
 function loadBoard(){try{return JSON.parse(localStorage.getItem(BOARD_KEY)||'[]');}catch(e){return [];}}
 function saveBoard(b){try{localStorage.setItem(BOARD_KEY,JSON.stringify(b.slice(0,100)));}catch(e){}}
 let playerName='Motard';let demoMode=false;
-function showResult(){document.getElementById('homeBtn').classList.add('hidden');
+function showResult(){resultShown=true;document.getElementById('homeBtn').classList.add('hidden');
   const total=hazards.length,ratio=total?P.reports/total:0;
   const protectedCount=P.reports*120+P.confirms*40;
   document.getElementById('resTitle').textContent=ratio>=0.9?'Green Master ! Tu as protégé '+protectedCount.toLocaleString('fr-FR')+' motards avec tes alertes !':P.reports>0?'Tu as protégé '+protectedCount.toLocaleString('fr-FR')+' motards avec tes alertes !':'Aucune alerte : les motards derrière toi roulaient sans filet.';
