@@ -113,3 +113,7 @@ Les écrans (accueil, résultats, roue, tuto, menu dev) occupent tout l'écran d
 ## Écran de chute Liberty Rider (v35)
 
 À chaque chute du joueur, écran d'alerte 2,4 s aux couleurs Rouge feu : picto alerte pulsant, « Chute détectée », « Liberty Rider prévient les secours et tes proches », barre de progression, illustration officielle « Liberto qui appelle l'assistance » (Drive, assets/brand/gm/liberto-assistance.svg), ambulance cartoon en SVG qui arrive de la droite avec gyrophares et roues animées, sirène synthétique. Pendant l'écran, tout est figé (rivaux, chrono, physique) ; à la fin le pilote repart à 55 % de sa vitesse, sans glissade ni perte de position. La pénalité de points (-20) reste. L'écran d'alerte exact de l'app n'a pas été retrouvé dans le Figma Product 2026 (seuls les réglages de notifications mentionnent la chute) : le style suit la charte et les dégradés « Alert » du fichier.
+
+## Alerte accident (v36)
+
+L'écran de chute reprend le principe de l'app : titre « Alerte accident », compte à rebours (3 s) avant prévenance des secours et des proches, gros bouton vert « Je vais bien » (reprend la course tout de suite) et gros bouton rouge « J'ai besoin d'aide » (les secours sont prévenus, l'ambulance arrive, reprise 2 s plus tard). Sans action, reprise automatique à la fin du compte à rebours. Course, rivaux et chrono figés pendant tout l'écran.

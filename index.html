@@ -203,12 +203,18 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 #fall{position:fixed;inset:0;z-index:65;display:none;background:radial-gradient(120% 90% at 50% 10%,#F26A4E 0%,#E84C2E 45%,#B9331A 100%);color:#fff;font-family:var(--corps);overflow:hidden}
 #fall.on{display:block;animation:fallin .25s ease-out}
 @keyframes fallin{from{opacity:0}to{opacity:1}}
-#fall .top{position:absolute;left:0;right:0;top:clamp(10px,5vh,44px);text-align:center;padding:0 16px}
+#fall .top{position:absolute;left:0;right:0;top:clamp(8px,3vh,36px);text-align:center;padding:0 16px}
 #fall .ico{width:clamp(54px,9vmin,84px);height:clamp(54px,9vmin,84px);border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;animation:pulse 1s ease-in-out infinite;box-shadow:0 0 0 0 rgba(255,255,255,.5)}
 #fall .ico img{width:60%;height:60%}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.55)}70%{box-shadow:0 0 0 22px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
-#fall h1{font:700 clamp(26px,5.5vmin,52px) var(--titre);margin:10px 0 4px;letter-spacing:-.01em}
+#fall h1{font:700 clamp(26px,5.5vmin,52px) var(--titre);margin:6px 0 2px;letter-spacing:-.01em}
 #fall p{margin:0;font-size:clamp(13px,2.2vmin,19px);opacity:.95;max-width:none}
+#fall .cd{margin-top:6px;font-size:clamp(12px,2vmin,16px);opacity:.9}#fall .cd b{font-family:var(--titre);font-size:1.3em}
+#fall .btns{display:flex;gap:clamp(10px,2vw,22px);justify-content:center;margin:clamp(10px,2.5vh,22px) auto 0;width:min(92vw,620px)}
+#fall .big{flex:1;border:0;border-radius:18px;padding:clamp(12px,3vh,24px) 10px;font:700 clamp(16px,3vmin,26px) var(--titre);color:#fff;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.28);border:4px solid rgba(255,255,255,.9);transition:transform .1s}
+#fall .big:active{transform:scale(.97)}
+#fall .big.green{background:#1F8F67}
+#fall .big.red{background:#B9331A}
 #fall .bar{width:min(70vw,420px);height:8px;border-radius:999px;background:rgba(255,255,255,.3);margin:14px auto 0;overflow:hidden}
 #fall .bar i{display:block;height:100%;width:0;background:#fff;border-radius:999px}
 #fall .lib{position:absolute;left:clamp(8px,4vw,60px);bottom:clamp(8px,6vh,60px);width:clamp(150px,32vmin,340px)}
@@ -222,7 +228,8 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 @keyframes flash{50%{opacity:.25}}
 #fall .amb .light.b{animation-delay:.15s}
 #fall .brand{position:absolute;right:16px;top:14px;width:clamp(90px,14vw,160px);margin:0}
-@media (max-width:520px){#fall .lib{width:120px;left:4px}#fall .amb{width:180px}}
+@media (max-width:520px){#fall .lib{width:120px;left:4px}#fall .amb{width:180px}#fall .btns{flex-direction:column;gap:8px}#fall .big{padding:10px}}
+@media (max-height:460px){#fall .ico{width:40px;height:40px}#fall h1{font-size:24px;margin:2px 0}#fall .big{padding:8px 10px;font-size:16px;border-width:3px}#fall .btns{margin-top:6px}#fall .bar{margin-top:8px}#fall .lib{width:120px}#fall .amb{width:200px}}
 #rotate{position:fixed;inset:0;z-index:70;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--prasin);color:#fff;text-align:center;padding:24px;font-family:var(--corps)}
 #rotate.on{display:flex}
 #rotate .ph{width:54px;height:96px;border:4px solid #fff;border-radius:12px;animation:rot 1.6s ease-in-out infinite}
@@ -238,7 +245,10 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 <button id="homeBtn" class="homebtn hidden" aria-label="Retour à l'accueil">&#8962;&nbsp; Retour à l'accueil</button>
 <div id="fall">
   <img class="brand" src="assets/brand/lr-logo-horizontal-blanc.png" alt="Liberty Rider">
-  <div class="top"><div class="ico"><img src="assets/brand/icons/alerte-dark.png" alt=""></div><h1>Chute détectée</h1><p id="fallText">Liberty Rider prévient les secours et tes proches. Tu n'es jamais seul sur la route.</p><div class="bar"><i id="fallBar"></i></div></div>
+  <div class="top"><div class="ico"><img src="assets/brand/icons/alerte-dark.png" alt=""></div><h1>Alerte accident</h1><p id="fallText">Liberty Rider a détecté une chute. Tout va bien ?</p>
+    <p class="cd">Les secours et tes proches seront prévenus dans <b id="fallCount">3</b> s</p>
+    <div class="btns"><button class="big green" id="fallOk">Je vais bien</button><button class="big red" id="fallHelp">J'ai besoin d'aide</button></div>
+    <div class="bar"><i id="fallBar"></i></div></div>
   <img class="lib" src="assets/brand/gm/liberto-assistance.svg" alt="">
   <div class="road"></div>
   <svg class="amb" viewBox="0 0 420 220" aria-hidden="true">
@@ -751,19 +761,19 @@ function sfx(kind){
 }
 
 /* ---------- gameplay ---------- */
-let fallT=0,fallPrev=0;const FALL_DUR=2.4;
+let fallT=0,fallPrev=0,fallHelp=false;const FALL_DUR=3.0;
 function wipeout(reason){
   if(P.crashed)return;
   P.crashed=true;P.crashT=2.3;P.crashDir=keys.left?-1:1;P.hp=0;P.crashes++;P.points=Math.max(0,P.points-20);P.shake=4;P.hitFlash=0.5;
   msg(reason,'#ff5a1f',56);sfx('skid');sfx('crash');
   // alerte Liberty Rider : la course est figée pendant l'écran (rivaux, chrono), puis le pilote repart comme s'il s'était relevé direct
-  fallPrev=P.speed;fallT=FALL_DUR;P.speed=0;
-  const f=document.getElementById('fall');f.classList.add('on');document.getElementById('fallBar').style.width='0%';
+  fallPrev=P.speed;fallT=FALL_DUR;fallHelp=false;P.speed=0;
+  const f=document.getElementById('fall');f.classList.add('on');f.classList.remove('help');document.getElementById('fallBar').style.width='0%';document.getElementById('fallCount').textContent=Math.ceil(FALL_DUR);document.getElementById('fallText').textContent='Liberty Rider a détecté une chute. Tout va bien ?';
   const a=f.querySelector('.amb');a.style.animation='none';void a.offsetWidth;a.style.animation='';
   setTimeout(()=>sfx('siren'),250);
 }
 function endFall(){
-  fallT=0;document.getElementById('fall').classList.remove('on');
+  fallT=0;document.getElementById('fall').classList.remove('on');document.getElementById('fallCount').parentElement.style.visibility='';
   P.crashed=false;P.crashT=0;P.hp=100;P.x=clamp(P.x,-0.8,0.8);P.lean=0;P.shake=0;P.hitFlash=0;P.speed=fallPrev*0.55;
 }
 function knockdown(r,dir,credit,text){
@@ -1895,6 +1905,8 @@ function goHome(){
   document.getElementById('playerName').value='';document.getElementById('playerEmail').value='';document.getElementById('cMarketing').checked=false;document.getElementById('formErr').style.display='none';
   titleEl.classList.remove('hidden');syncRemote();
 }
+document.getElementById('fallOk').addEventListener('click',()=>{if(fallT>0){sfx('ping');endFall();}});
+document.getElementById('fallHelp').addEventListener('click',()=>{if(fallT>0&&!fallHelp){fallHelp=true;fallT=Math.max(fallT,2.2);document.getElementById('fallText').textContent='Les secours sont prévenus, ils arrivent. Tes proches sont informés.';document.getElementById('fallCount').parentElement.style.visibility='hidden';sfx('siren');}});
 document.getElementById('resHome').addEventListener('click',goHome);
 document.getElementById('wheelHome').addEventListener('click',goHome);
 document.getElementById('homeBtn').addEventListener('click',goHome);
@@ -1959,7 +1971,7 @@ loadAssets().then(()=>{startBtn.disabled=false;startBtn.textContent='GO';}).catc
 let last=performance.now(),acc=0;const STEP=1/60;
 function loop(now){
   let dt=Math.min(0.1,(now-last)/1000);last=now;acc+=dt;
-  if(fallT>0){fallT-=dt;document.getElementById('fallBar').style.width=Math.round(100*(1-fallT/FALL_DUR))+'%';if(fallT<=0)endFall();acc=0;}
+  if(fallT>0){fallT-=dt;document.getElementById('fallBar').style.width=Math.round(100*(1-fallT/FALL_DUR))+'%';document.getElementById('fallCount').textContent=Math.max(0,Math.ceil(fallT));if(fallT<=0)endFall();acc=0;}
   else while(acc>=STEP){if(!window.__pause)update(STEP);acc-=STEP;}
   if(assetsReady)render();
   updateAudio();
