@@ -128,3 +128,9 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 - Ambulance : illustration cartoon des captures Store du Figma « [INTERNAL] - RENAULT Superdriver » (calque image, exportée en 3x, remise à l'endroit et détourée) : assets/brand/gm/ambulance.png. Gyrophares et rampe lumineuse clignotent (halos CSS superposés).
 - Liberto urgentiste : illustration générée (ElevenLabs, modèle gemini-3-pro-image) à partir de l'illustration officielle de Liberto et de l'ambulance en références ; variante retenue : assets/brand/gm/liberto-urgentiste.png, variante de secours : liberto-urgentiste-2.png. Référence utilisée : assets/brand/gm/liberto-ref.png.
 - Pendant l'alerte, le HUD et les commandes tactiles sont masqués.
+
+## Téléphone : installation, plein écran, vitesse, son (v40)
+
+- Sur tactile dans un navigateur (pas en appli installée), un bandeau sur l'accueil propose « Installer l'appli » : sur Android, invite d'installation native ; sur iPhone, mode d'emploi Partager → Sur l'écran d'accueil (Safari n'autorise pas le plein écran autrement). Sur Android, le bouton GO passe aussi le jeu en plein écran et verrouille le paysage.
+- Vitesse maximale sur tactile : 62 % de celle du PC (affichage toujours sur 85 km/h).
+- Son moteur : le ralenti s'éteint dès 35 % de la vitesse, le roulage entre dès qu'on bouge et monte jusqu'à pleine vitesse (plus de ralenti audible à fond).
