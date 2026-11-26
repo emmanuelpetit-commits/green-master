@@ -95,3 +95,7 @@ Prénom + e-mail « liberty » (en minuscules) = partie de l'équipe Liberty Rid
 ## Déploiement Apps Script (v31)
 
 Script « Green Master - Stand Lyon » déployé en application web (version 1, accès « Tout le monde », exécuté avec le compte du propriétaire du Sheet). Son URL /exec est en dur dans CONFIG.sheetUrl : le jeu est connecté au Sheet partout (site, appli, artefact) sans rien configurer. Pour changer de Sheet ou de script, coller une autre URL dans le menu dev, onglet « Google Sheet » (prioritaire sur la valeur en dur). Fuseau du Sheet : Europe/Paris.
+
+## Mode invité (v32)
+
+Prénom + e-mail « invité » (ou « invite ») = partie d'invité : pas d'e-mail, pas de jeu-concours, classement à part « Classement Invités », séparé du public et de la Team Liberty. Colonne « Invité » dans l'export et colonne guest dans le Sheet (script Apps Script version 2).

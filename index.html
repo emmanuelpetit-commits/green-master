@@ -1605,16 +1605,17 @@ function drawHUD(){
 }
 
 const titleEl=document.getElementById('title'),resultEl=document.getElementById('result');
-let playerEmail='',consentContest=false,consentMarketing=false,teamMode=false;
+let playerEmail='',consentContest=false,consentMarketing=false,teamMode=false,guestMode=false;
 function validForm(){
   const err=document.getElementById('formErr');
   const nm=document.getElementById('playerName').value.trim(),em=document.getElementById('playerEmail').value.trim();
   const cc=true,cm=document.getElementById('cMarketing').checked;
   const show=t=>{err.textContent=t;err.style.display='block';return false;};
   if(!nm)return show('Indique ton prénom pour le classement.');
-  if(em==='liberty'){err.style.display='none';playerName=nm;playerEmail='';consentContest=false;consentMarketing=false;teamMode=true;return true;}
+  if(em==='liberty'){err.style.display='none';playerName=nm;playerEmail='';consentContest=false;consentMarketing=false;teamMode=true;guestMode=false;return true;}
+  if(em==='invité'||em==='invite'){err.style.display='none';playerName=nm;playerEmail='';consentContest=false;consentMarketing=false;teamMode=false;guestMode=true;return true;}
   if((cm||em)&&!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return show('Indique une adresse e-mail valide pour participer au jeu-concours.');
-  err.style.display='none';playerName=nm;playerEmail=em;consentContest=cc&&!!em;consentMarketing=cm&&!!em;teamMode=false;return true;
+  err.style.display='none';playerName=nm;playerEmail=em;consentContest=cc&&!!em;consentMarketing=cm&&!!em;teamMode=false;guestMode=false;return true;
 }
 function startRace(){if(!assetsReady)return;if(state==='title'&&!demoMode&&!validForm())return;if(state==='title'&&!demoMode&&!localStorage.getItem('gm_tuto_seen')){openTuto(true);return;}initAudio();reset();titleEl.classList.add('hidden');resultEl.classList.add('hidden');document.getElementById('homeBtn').classList.remove('hidden');state='countdown';cdT=3.99;msgs=[];sfx('beep');}
 const BOARD_KEY='gm_board_v1';
@@ -1639,17 +1640,18 @@ function showResult(){resultShown=true;document.getElementById('homeBtn').classL
   document.getElementById('resTotal').textContent=P.points+' pts';
   // classement du stand (localStorage)
   const all=loadBoard();
-  const entry={name:playerName,email:playerEmail,contest:consentContest,marketing:consentMarketing,team:teamMode,pts:P.points,reports:P.reports,total,crashes:P.crashes,time:Math.round(P.time),date:new Date().toISOString(),id:Date.now()+Math.random()};
+  const entry={name:playerName,email:playerEmail,contest:consentContest,marketing:consentMarketing,team:teamMode,guest:guestMode,pts:P.points,reports:P.reports,total,crashes:P.crashes,time:Math.round(P.time),date:new Date().toISOString(),id:Date.now()+Math.random()};
   all.push(entry);all.sort((a,b)=>b.pts-a.pts||b.reports-a.reports||a.time-b.time);if(!demoMode)saveBoard(all);lastEntry=entry;
   // deux classements : le public (visiteurs) et la Team Liberty (e-mail « liberty »), jamais mélangés
-  let board=all.filter(e=>!!e.team===teamMode);
-  if(remote&&remote.board){board=(teamMode?remote.team:remote.board).slice();board.push(entry);board.sort((a,b)=>b.pts-a.pts||b.reports-a.reports||a.time-b.time);}
-  if(!demoMode)postRemote({name:entry.name,email:entry.email,contest:entry.contest,marketing:entry.marketing,team:entry.team,pts:entry.pts,reports:entry.reports,total:entry.total,crashes:entry.crashes,time:entry.time,flooz:P.flooz,id:entry.id}).then(()=>syncRemote());
-  document.querySelector('#result .board h2').textContent=teamMode?'Classement Team Liberty 🏍':'Classement Green Master';
+  const mode=guestMode?'guest':teamMode?'team':'public',modeOf=e=>e.guest?'guest':e.team?'team':'public';
+  let board=all.filter(e=>modeOf(e)===mode);
+  if(remote&&remote.board){board=(guestMode?(remote.guests||[]):teamMode?remote.team:remote.board).slice();board.push(entry);board.sort((a,b)=>b.pts-a.pts||b.reports-a.reports||a.time-b.time);}
+  if(!demoMode)postRemote({name:entry.name,email:entry.email,contest:entry.contest,marketing:entry.marketing,team:entry.team,guest:entry.guest,pts:entry.pts,reports:entry.reports,total:entry.total,crashes:entry.crashes,time:entry.time,flooz:P.flooz,id:entry.id}).then(()=>syncRemote());
+  document.querySelector('#result .board h2').textContent=guestMode?'Classement Invités 🎟':teamMode?'Classement Team Liberty 🏍':'Classement Green Master';
   document.querySelector('#wheelBtn b').textContent=wheelState.done?'Voir mon cadeau':'Tourne la roue Liberty Rider';
   const myRank=board.findIndex(e=>e.id===entry.id)+1;
   const bb=document.getElementById('resBadge');
-  if(myRank<=3){const m=['or','argent','bronze'][myRank-1];document.getElementById('resBadgeImg').src='assets/brand/gm/badge-'+m+'-national.png';document.getElementById('resBadgeTitle').textContent='Badge '+m.charAt(0).toUpperCase()+m.slice(1)+' débloqué';document.getElementById('resBadgeText').textContent='Tu es '+(myRank===1?'premier':myRank===2?'deuxième':'troisième')+(teamMode?' de la Team Liberty.':' du classement du stand.');bb.classList.remove('hidden');}
+  if(myRank<=3){const m=['or','argent','bronze'][myRank-1];document.getElementById('resBadgeImg').src='assets/brand/gm/badge-'+m+'-national.png';document.getElementById('resBadgeTitle').textContent='Badge '+m.charAt(0).toUpperCase()+m.slice(1)+' débloqué';document.getElementById('resBadgeText').textContent='Tu es '+(myRank===1?'premier':myRank===2?'deuxième':'troisième')+(guestMode?' du classement des invités.':teamMode?' de la Team Liberty.':' du classement du stand.');bb.classList.remove('hidden');}
   else bb.classList.add('hidden');
   const ol=document.getElementById('board');const shown=board.slice(0,8);
   if(myRank>8)shown.push(entry);
@@ -1685,8 +1687,8 @@ let logoClicks=[];
 function secretTap(){const t=Date.now();logoClicks=logoClicks.filter(x=>t-x<3000);logoClicks.push(t);if(logoClicks.length>=5){logoClicks=[];openAdmin();}}
 document.querySelectorAll('#title .brand, #resLogo').forEach(el=>{el.style.pointerEvents='auto';el.addEventListener('click',secretTap);});
 const adminEl=document.getElementById('admin');
-const COLS=[['date','Date'],['name','Prénom'],['email','E-mail'],['contest','Jeu-concours'],['marketing','Contact commercial'],['pts','Points'],['reports','Dangers signalés'],['total','Dangers sur le parcours'],['crashes','Chutes'],['time','Temps (s)'],['gift','Cadeau roue'],['team','Team Liberty']];
-function fmtCell(k,v){if(k==='contest'||k==='marketing'||k==='team')return v?'oui':'non';if(k==='date')return typeof v==='string'?v.replace('T',' ').slice(0,19):new Date(v).toISOString().slice(0,19);return v==null?'':v;}
+const COLS=[['date','Date'],['name','Prénom'],['email','E-mail'],['contest','Jeu-concours'],['marketing','Contact commercial'],['pts','Points'],['reports','Dangers signalés'],['total','Dangers sur le parcours'],['crashes','Chutes'],['time','Temps (s)'],['gift','Cadeau roue'],['team','Team Liberty'],['guest','Invité']];
+function fmtCell(k,v){if(k==='contest'||k==='marketing'||k==='team'||k==='guest')return v?'oui':'non';if(k==='date')return typeof v==='string'?v.replace('T',' ').slice(0,19):new Date(v).toISOString().slice(0,19);return v==null?'':v;}
 function openAdmin(){
   const b=loadBoard();
   document.getElementById('adminCount').textContent=b.length+' partie'+(b.length>1?'s':'')+' enregistrée'+(b.length>1?'s':'')+' · '+b.filter(e=>e.email).length+' e-mail'+(b.filter(e=>e.email).length>1?'s':'')+' · '+b.filter(e=>e.contest).length+' inscrit'+(b.filter(e=>e.contest).length>1?'s':'')+' au jeu-concours · '+b.filter(e=>e.team).length+' Team Liberty';
@@ -1813,7 +1815,7 @@ document.getElementById('qrFile').addEventListener('change',e=>{const f=e.target
 document.getElementById('qrSave').addEventListener('click',()=>{const u=document.getElementById('qrUrl').value.trim();const v=qrPending||u;if(!v){document.getElementById('qrOk').textContent='Choisis une image ou colle une URL.';return;}if(v.length>1800000){document.getElementById('qrOk').textContent='Image trop lourde (max ~1,3 Mo).';return;}try{localStorage.setItem(QR_KEY,v);document.getElementById('qrOk').textContent='QR code enregistré.';renderQrAdmin();document.getElementById('qrOk').textContent='QR code enregistré.';}catch(err){document.getElementById('qrOk').textContent='Impossible d\'enregistrer (stockage plein).';}});
 document.getElementById('qrRemove').addEventListener('click',()=>{localStorage.removeItem(QR_KEY);renderQrAdmin();document.getElementById('qrOk').textContent='QR code retiré.';});
 function jumpToEnd(){
-  if(!assetsReady)return;demoMode=true;teamMode=false;playerName='Démo';playerEmail='';consentContest=false;consentMarketing=false;document.getElementById('demoBtn').classList.add('on');
+  if(!assetsReady)return;demoMode=true;teamMode=false;guestMode=false;playerName='Démo';playerEmail='';consentContest=false;consentMarketing=false;document.getElementById('demoBtn').classList.add('on');
   adminEl.classList.add('hidden');titleEl.classList.add('hidden');resultEl.classList.add('hidden');wheelEl.classList.add('hidden');
   initAudio();reset();for(const h of hazards){h.passed=true;h.crossed=true;}for(const c of coins)c.taken=true;state='race';P.dist=trackLen;position=trackLen-segLen*3;msgs=[];
 }
@@ -1823,7 +1825,7 @@ function goHome(){
   state='title';msgs=[];keys.left=keys.right=keys.up=keys.down=false;keys.steer=null;
   for(const id of ['result','wheel','admin','tuto'])document.getElementById(id).classList.add('hidden');
   document.getElementById('homeBtn').classList.add('hidden');confCv.style.display='none';
-  demoMode=false;teamMode=false;document.getElementById('demoBtn').classList.remove('on');
+  demoMode=false;teamMode=false;guestMode=false;document.getElementById('demoBtn').classList.remove('on');
   document.getElementById('playerName').value='';document.getElementById('playerEmail').value='';document.getElementById('cMarketing').checked=false;document.getElementById('formErr').style.display='none';
   titleEl.classList.remove('hidden');syncRemote();
 }
@@ -1836,7 +1838,7 @@ document.getElementById('adminBack').addEventListener('click',backToTitle);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!adminEl.classList.contains('hidden'))backToTitle();});
 document.getElementById('startBtn').addEventListener('click',()=>{demoMode=false;document.getElementById('demoBtn').classList.remove('on');startRace();});
 document.getElementById('adminBtn').addEventListener('click',openAdmin);
-document.getElementById('demoBtn').addEventListener('click',()=>{if(!assetsReady)return;demoMode=true;teamMode=false;playerName='Démo';playerEmail='';consentContest=false;consentMarketing=false;document.getElementById('demoBtn').classList.add('on');startRace();});
+document.getElementById('demoBtn').addEventListener('click',()=>{if(!assetsReady)return;demoMode=true;teamMode=false;guestMode=false;playerName='Démo';playerEmail='';consentContest=false;consentMarketing=false;document.getElementById('demoBtn').classList.add('on');startRace();});
 document.getElementById('againBtn').addEventListener('click',startRace);
 addEventListener('keydown',e=>{
   const c=e.code;
