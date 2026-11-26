@@ -1,0 +1,6 @@
+.DS_Store
+.claude/
+assets/textures/
+assets/models/*.glb
+classic-2d.html
+road-rage-combat.html
