@@ -109,3 +109,7 @@ Les écrans (accueil, résultats, roue, tuto, menu dev) occupent tout l'écran d
 - Nuages fixes par rapport au regard : ils ne tournent plus avec la route dans les virages (seules les collines gardent la parallaxe).
 - Sur tactile : vitesse maximale réduite de 22 % (l'affichage reste sur 85 km/h, les rivaux ralentissent d'autant) et flaques, huile, nids-de-poule et débris agrandis de 30 %.
 - Partout : les taches d'huile sont de vraies nappes de pétrole noires à plusieurs lobes avec liseré et reflet ; flaques plus bleues et opaques, nids-de-poule plus grands.
+
+## Écran de chute Liberty Rider (v35)
+
+À chaque chute du joueur, écran d'alerte 2,4 s aux couleurs Rouge feu : picto alerte pulsant, « Chute détectée », « Liberty Rider prévient les secours et tes proches », barre de progression, illustration officielle « Liberto qui appelle l'assistance » (Drive, assets/brand/gm/liberto-assistance.svg), ambulance cartoon en SVG qui arrive de la droite avec gyrophares et roues animées, sirène synthétique. Pendant l'écran, tout est figé (rivaux, chrono, physique) ; à la fin le pilote repart à 55 % de sa vitesse, sans glissade ni perte de position. La pénalité de points (-20) reste. L'écran d'alerte exact de l'app n'a pas été retrouvé dans le Figma Product 2026 (seuls les réglages de notifications mentionnent la chute) : le style suit la charte et les dégradés « Alert » du fichier.

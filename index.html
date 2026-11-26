@@ -199,6 +199,30 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 .tb.report img{width:44px;height:44px}
 .tb.report span{font:700 11px var(--titre);line-height:1.1;text-align:center}
 .tb.report.hold{background:var(--feu);color:#fff}
+/* écran d'alerte chute Liberty Rider */
+#fall{position:fixed;inset:0;z-index:65;display:none;background:radial-gradient(120% 90% at 50% 10%,#F26A4E 0%,#E84C2E 45%,#B9331A 100%);color:#fff;font-family:var(--corps);overflow:hidden}
+#fall.on{display:block;animation:fallin .25s ease-out}
+@keyframes fallin{from{opacity:0}to{opacity:1}}
+#fall .top{position:absolute;left:0;right:0;top:clamp(10px,5vh,44px);text-align:center;padding:0 16px}
+#fall .ico{width:clamp(54px,9vmin,84px);height:clamp(54px,9vmin,84px);border-radius:50%;background:#fff;display:inline-flex;align-items:center;justify-content:center;animation:pulse 1s ease-in-out infinite;box-shadow:0 0 0 0 rgba(255,255,255,.5)}
+#fall .ico img{width:60%;height:60%}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.55)}70%{box-shadow:0 0 0 22px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+#fall h1{font:700 clamp(26px,5.5vmin,52px) var(--titre);margin:10px 0 4px;letter-spacing:-.01em}
+#fall p{margin:0;font-size:clamp(13px,2.2vmin,19px);opacity:.95;max-width:none}
+#fall .bar{width:min(70vw,420px);height:8px;border-radius:999px;background:rgba(255,255,255,.3);margin:14px auto 0;overflow:hidden}
+#fall .bar i{display:block;height:100%;width:0;background:#fff;border-radius:999px}
+#fall .lib{position:absolute;left:clamp(8px,4vw,60px);bottom:clamp(8px,6vh,60px);width:clamp(150px,32vmin,340px)}
+#fall .road{position:absolute;left:0;right:0;bottom:0;height:clamp(40px,9vh,80px);background:#242121}
+#fall .road:before{content:'';position:absolute;left:0;right:0;top:45%;height:6px;background:repeating-linear-gradient(90deg,#fff 0 40px,transparent 40px 80px);opacity:.8}
+#fall .amb{position:absolute;right:-60%;bottom:clamp(30px,7vh,64px);width:clamp(200px,38vmin,420px);animation:ambin 1.5s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes ambin{from{right:-60%}to{right:6%}}
+#fall .amb .wheel{transform-origin:center;animation:spin .35s linear infinite}
+@keyframes spin{to{transform:rotate(-360deg)}}
+#fall .amb .light{animation:flash .3s steps(1) infinite}
+@keyframes flash{50%{opacity:.25}}
+#fall .amb .light.b{animation-delay:.15s}
+#fall .brand{position:absolute;right:16px;top:14px;width:clamp(90px,14vw,160px);margin:0}
+@media (max-width:520px){#fall .lib{width:120px;left:4px}#fall .amb{width:180px}}
 #rotate{position:fixed;inset:0;z-index:70;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--prasin);color:#fff;text-align:center;padding:24px;font-family:var(--corps)}
 #rotate.on{display:flex}
 #rotate .ph{width:54px;height:96px;border:4px solid #fff;border-radius:12px;animation:rot 1.6s ease-in-out infinite}
@@ -212,6 +236,25 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 </head>
 <body>
 <button id="homeBtn" class="homebtn hidden" aria-label="Retour à l'accueil">&#8962;&nbsp; Retour à l'accueil</button>
+<div id="fall">
+  <img class="brand" src="assets/brand/lr-logo-horizontal-blanc.png" alt="Liberty Rider">
+  <div class="top"><div class="ico"><img src="assets/brand/icons/alerte-dark.png" alt=""></div><h1>Chute détectée</h1><p id="fallText">Liberty Rider prévient les secours et tes proches. Tu n'es jamais seul sur la route.</p><div class="bar"><i id="fallBar"></i></div></div>
+  <img class="lib" src="assets/brand/gm/liberto-assistance.svg" alt="">
+  <div class="road"></div>
+  <svg class="amb" viewBox="0 0 420 220" aria-hidden="true">
+    <g stroke="#242121" stroke-width="7" stroke-linejoin="round">
+      <rect x="140" y="28" width="60" height="22" rx="8" fill="#4383E7" class="light"/><rect x="200" y="28" width="60" height="22" rx="8" fill="#E84C2E" class="light b"/>
+      <path d="M30 150 V95 q0-14 14-14 h80 l30-38 q6-8 18-8 h150 q22 0 22 22 v93 z" fill="#FBFBF7"/>
+      <path d="M124 81 l30-38 h60 v38 z" fill="#4383E7"/><rect x="226" y="43" width="64" height="38" rx="4" fill="#4383E7"/>
+      <rect x="30" y="112" width="314" height="20" fill="#E84C2E" stroke="none"/>
+      <rect x="296" y="86" width="22" height="66" fill="#E84C2E" stroke="none"/><rect x="274" y="108" width="66" height="22" fill="#E84C2E" stroke="none"/>
+      <rect x="30" y="150" width="314" height="18" rx="6" fill="#242121"/>
+      <circle cx="100" cy="166" r="30" fill="#242121"/><circle cx="100" cy="166" r="13" fill="#FBFBF7" class="wheel"/><path d="M100 153 v26 M87 166 h26" stroke="#242121" stroke-width="4" class="wheel"/>
+      <circle cx="280" cy="166" r="30" fill="#242121"/><circle cx="280" cy="166" r="13" fill="#FBFBF7"/><path d="M280 153 v26 M267 166 h26" stroke="#242121" stroke-width="4"/>
+      <rect x="338" y="100" width="20" height="26" rx="6" fill="#F5B72B"/>
+    </g>
+  </svg>
+</div>
 <div id="rotate"><div class="ph"></div><b>Tourne ton téléphone</b><span>Green Master se joue en paysage.</span></div>
 <div id="wrap"><div id="stage">
 <canvas id="gl"></canvas>
@@ -701,16 +744,27 @@ function sfx(kind){
     case 'finish':[[523,0],[659,0.14],[784,0.28],[1047,0.42]].forEach(([f,d])=>tone('triangle',f,d,0.5,0.18));tone('sine',262,0.42,0.9,0.12);break;
     case 'beep':tone('square',440,0,0.14,0.1);break;
     case 'tick':tone('square',1800,0,0.03,0.05);break;
+    case 'siren':for(let i=0;i<3;i++){tone('sawtooth',660,i*0.6,0.3,0.07,880);tone('sawtooth',880,i*0.6+0.3,0.3,0.07,660);}break;
     case 'coin':tone('square',1319,0,0.09,0.09);tone('square',1760,0.08,0.28,0.09);tone('sine',3520,0.08,0.18,0.03);break;
     case 'go':tone('square',880,0,0.5,0.12);tone('square',1760,0.05,0.4,0.05);break;
   }
 }
 
 /* ---------- gameplay ---------- */
+let fallT=0,fallPrev=0;const FALL_DUR=2.4;
 function wipeout(reason){
   if(P.crashed)return;
   P.crashed=true;P.crashT=2.3;P.crashDir=keys.left?-1:1;P.hp=0;P.crashes++;P.points=Math.max(0,P.points-20);P.shake=4;P.hitFlash=0.5;
   msg(reason,'#ff5a1f',56);sfx('skid');sfx('crash');
+  // alerte Liberty Rider : la course est figée pendant l'écran (rivaux, chrono), puis le pilote repart comme s'il s'était relevé direct
+  fallPrev=P.speed;fallT=FALL_DUR;P.speed=0;
+  const f=document.getElementById('fall');f.classList.add('on');document.getElementById('fallBar').style.width='0%';
+  const a=f.querySelector('.amb');a.style.animation='none';void a.offsetWidth;a.style.animation='';
+  setTimeout(()=>sfx('siren'),250);
+}
+function endFall(){
+  fallT=0;document.getElementById('fall').classList.remove('on');
+  P.crashed=false;P.crashT=0;P.hp=100;P.x=clamp(P.x,-0.8,0.8);P.lean=0;P.shake=0;P.hitFlash=0;P.speed=fallPrev*0.55;
 }
 function knockdown(r,dir,credit,text){
   r.crashed=true;r.crashT=3;r.crashDir=dir||1;r.hp=0;r.animT=0;
@@ -1836,7 +1890,7 @@ function backToTitle(){adminEl.classList.add('hidden');if(state!=='race'&&state!
 function goHome(){
   state='title';msgs=[];keys.left=keys.right=keys.up=keys.down=false;keys.steer=null;
   for(const id of ['result','wheel','admin','tuto'])document.getElementById(id).classList.add('hidden');
-  document.getElementById('homeBtn').classList.add('hidden');confCv.style.display='none';document.getElementById('rotate').classList.remove('on');
+  document.getElementById('homeBtn').classList.add('hidden');confCv.style.display='none';document.getElementById('rotate').classList.remove('on');fallT=0;document.getElementById('fall').classList.remove('on');
   demoMode=false;teamMode=false;guestMode=false;document.getElementById('demoBtn').classList.remove('on');
   document.getElementById('playerName').value='';document.getElementById('playerEmail').value='';document.getElementById('cMarketing').checked=false;document.getElementById('formErr').style.display='none';
   titleEl.classList.remove('hidden');syncRemote();
@@ -1905,14 +1959,15 @@ loadAssets().then(()=>{startBtn.disabled=false;startBtn.textContent='GO';}).catc
 let last=performance.now(),acc=0;const STEP=1/60;
 function loop(now){
   let dt=Math.min(0.1,(now-last)/1000);last=now;acc+=dt;
-  while(acc>=STEP){if(!window.__pause)update(STEP);acc-=STEP;}
+  if(fallT>0){fallT-=dt;document.getElementById('fallBar').style.width=Math.round(100*(1-fallT/FALL_DUR))+'%';if(fallT<=0)endFall();acc=0;}
+  else while(acc>=STEP){if(!window.__pause)update(STEP);acc-=STEP;}
   if(assetsReady)render();
   updateAudio();
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 if('serviceWorker' in navigator&&location.protocol==='https:'){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
-window.G={get coins(){return coins;},segs:()=>segments,keys,update,render,startRace,report,currentRank,sfxLoaded:()=>Object.keys(sfxBuf),loops:()=>Object.keys(loops),ac:()=>AC&&AC.state,hazards:()=>hazards,copAlerts:()=>copAlerts,crossings:()=>crossings,wrapDelta,segLen,playerZ,scene,renderer,camera,get P(){return P;},get state(){return state;},rivals:()=>rivals,ents:()=>ents,pos:()=>position,setPos:z=>{position=z;},trackLen:()=>trackLen,ready:()=>assetsReady};
+window.G={get coins(){return coins;},wipeout,segs:()=>segments,keys,update,render,startRace,report,currentRank,sfxLoaded:()=>Object.keys(sfxBuf),loops:()=>Object.keys(loops),ac:()=>AC&&AC.state,hazards:()=>hazards,copAlerts:()=>copAlerts,crossings:()=>crossings,wrapDelta,segLen,playerZ,scene,renderer,camera,get P(){return P;},get state(){return state;},rivals:()=>rivals,ents:()=>ents,pos:()=>position,setPos:z=>{position=z;},trackLen:()=>trackLen,ready:()=>assetsReady};
 </script>
 </body>
 </html>
