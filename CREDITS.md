@@ -134,3 +134,8 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 - Sur tactile dans un navigateur (pas en appli installée), un bandeau sur l'accueil propose « Installer l'appli » : sur Android, invite d'installation native ; sur iPhone, mode d'emploi Partager → Sur l'écran d'accueil (Safari n'autorise pas le plein écran autrement). Sur Android, le bouton GO passe aussi le jeu en plein écran et verrouille le paysage.
 - Vitesse maximale sur tactile : 62 % de celle du PC (affichage toujours sur 85 km/h).
 - Son moteur : le ralenti s'éteint dès 35 % de la vitesse, le roulage entre dès qu'on bouge et monte jusqu'à pleine vitesse (plus de ralenti audible à fond).
+
+## Google Sheet : un onglet par type de joueur (script v3)
+
+- Le script Google range chaque partie dans l'onglet qui correspond : « Parties » pour les visiteurs du salon (c'est l'onglet à exporter pour le tirage), « Team Liberty » pour l'e-mail `liberty`, « Invités » pour l'e-mail `invité`. Les onglets sont créés automatiquement avec leurs en-têtes.
+- Le cadeau de la roue est complété dans le bon onglet. Les trois classements du jeu lisent chacun leur onglet.

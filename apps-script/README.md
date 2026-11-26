@@ -2,7 +2,9 @@
 
 Un seul Google Sheet, partagé à l'équipe, alimenté en direct par le jeu :
 
-- onglet **Parties** : une ligne par partie terminée (date, prénom, e-mail, jeu-concours, marketing, Team Liberty, points, dangers signalés, dangers sur le parcours, chutes, temps, cadeau de la roue, Flooz, identifiant).
+- onglet **Parties** : une ligne par partie terminée par un visiteur du salon (date, prénom, e-mail, jeu-concours, marketing, points, dangers signalés, dangers sur le parcours, chutes, temps, cadeau de la roue, Flooz, identifiant). C'est l'onglet à exporter pour le tirage et les e-mails.
+- onglet **Team Liberty** : mêmes colonnes, uniquement les parties jouées avec l'e-mail `liberty` (classement interne de l'équipe).
+- onglet **Invités** : mêmes colonnes, uniquement les parties jouées avec l'e-mail `invité` (amis, hors concours).
 - onglet **Config** : clé / valeur. `cadeau1` … `cadeau8` (les 8 cases de la roue), `qr_url` (image du QR code du badge exclusif), `reglement_url`, `contact_rgpd`.
 
 Le script `Code.gs` est déployé en Application Web depuis l'éditeur Apps Script du Sheet (Extensions → Apps Script) :
