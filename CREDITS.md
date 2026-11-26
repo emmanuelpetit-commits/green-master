@@ -85,3 +85,9 @@ Le Liberto 3D animé de la carte du cadeau est remplacé par l'illustration offi
 ## Team Liberty (v28)
 
 Prénom + e-mail « liberty » (en minuscules) = partie de l'équipe Liberty Rider : pas d'e-mail enregistré, pas de jeu-concours, et un classement à part « Classement Team Liberty » affiché à la fin, jamais mélangé au classement public des visiteurs. Colonne « Team Liberty » dans l'export, compteur dans le menu dev.
+
+## Site, appli installable et Google Sheet (v29)
+
+- Site public : https://emmanuelpetit-commits.github.io/green-master/ (GitHub Pages, dépôt emmanuelpetit-commits/green-master, branche main). Chaque modification poussée sur main met le site à jour en une minute environ.
+- Appli installable (PWA) : manifest.webmanifest, icônes assets/pwa/, service worker sw.js qui met tout le jeu en cache (fonctionne hors ligne une fois chargé). Sur iPhone : Partager → Sur l'écran d'accueil ; sur Android : Installer l'application. À chaque nouvelle version, changer le nom du cache dans sw.js.
+- Google Sheet « Green Master – Stand Lyon » (onglets Parties et Config) + script Apps Script apps-script/Code.gs déployé en application web. L'URL /exec se colle dans le menu dev, onglet « Google Sheet ». Connecté, le jeu envoie chaque partie dans le Sheet (file d'attente locale si le réseau coupe) et lit cadeaux, QR code, règlement et classements depuis l'onglet Config.

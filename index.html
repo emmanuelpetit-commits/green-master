@@ -270,7 +270,7 @@ button.pill.light{background:#fff;color:var(--anthracite)}
   <button id="adminBack" aria-label="Retour au jeu">&#8592;&nbsp; Retour au jeu</button>
   <div class="adminbox">
     <h1>Menu développement</h1>
-    <div class="tabs"><button class="tab on" data-tab="list">Inscrits et scores</button><button class="tab" data-tab="wheel">Gérer la roue</button><button class="tab" data-tab="qr">Gérer le QR code</button><button class="tab goend" id="adminJumpEnd">▶ Aller à la fin de la course</button></div>
+    <div class="tabs"><button class="tab on" data-tab="list">Inscrits et scores</button><button class="tab" data-tab="wheel">Gérer la roue</button><button class="tab" data-tab="qr">Gérer le QR code</button><button class="tab" data-tab="sheet">Google Sheet</button><button class="tab goend" id="adminJumpEnd">▶ Aller à la fin de la course</button></div>
     <div class="admsec" id="admList">
     <p class="hint" id="adminCount"></p>
     <div class="actions"><button class="pill" id="adminXlsx">Télécharger l'Excel (.xlsx)</button><button class="pill light" id="adminCsv">Copier en CSV</button><button class="pill light" id="adminClear">Tout effacer (double-clic)</button><button class="pill light" id="adminClose">Fermer</button></div>
@@ -282,6 +282,12 @@ button.pill.light{background:#fff;color:var(--anthracite)}
     <div class="giftgrid" id="giftGrid"></div>
     <div class="actions"><button class="pill" id="giftSave">Enregistrer la roue</button><button class="pill light" id="giftReset">Vider les 8 cases</button></div>
     <div class="ok" id="giftOk"></div>
+    </div>
+    <div class="admsec hidden" id="admSheet">
+    <p class="hint">Colle ici l'adresse de l'application web Apps Script (elle finit par <b>/exec</b>). Une fois connecté, chaque partie est envoyée dans le Google Sheet, et la roue, le QR code et les classements sont lus depuis l'onglet Config du Sheet.</p>
+    <input type="text" id="sheetUrlInput" placeholder="https://script.google.com/macros/s/…/exec" style="font:500 13px var(--corps);padding:8px 12px;border:1px solid #ccc;border-radius:10px;width:min(90vw,560px)">
+    <div class="actions"><button class="pill" id="sheetSave">Enregistrer et tester</button><a class="pill light" id="sheetOpen" href="#" target="_blank" rel="noopener" style="text-decoration:none">Ouvrir le Google Sheet</a><button class="pill light" id="sheetOff">Déconnecter</button></div>
+    <div class="ok" id="sheetOk"></div>
     </div>
     <div class="admsec hidden" id="admQr">
     <p class="hint">Le QR code s'affiche après la roue, avec le texte du badge exclusif. Tant qu'il n'y en a pas, un carré vide est affiché.</p>
@@ -299,7 +305,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import MODELS_B64 from './assets/models-bundle.js';
 function b64buf(b){const t=atob(b);const u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i);return u.buffer;}
 /* ---------- configuration du stand (à compléter) ---------- */
-const CONFIG={
+const CONFIG={sheetUrl:'',sheetViewUrl:'https://docs.google.com/spreadsheets/d/1pn7KgT50j1GO1pSNmi4fOv31EYHw9455-dJmfE7zOaQ/edit',
   contestUrl:'',            // lien du jeu-concours (click to call) : à renseigner
   rulesUrl:'',              // lien du règlement du jeu-concours
   dpoContact:'[contact RGPD à compléter]', // ex. une adresse e-mail dédiée
@@ -1636,7 +1642,9 @@ function showResult(){document.getElementById('homeBtn').classList.add('hidden')
   const entry={name:playerName,email:playerEmail,contest:consentContest,marketing:consentMarketing,team:teamMode,pts:P.points,reports:P.reports,total,crashes:P.crashes,time:Math.round(P.time),date:new Date().toISOString(),id:Date.now()+Math.random()};
   all.push(entry);all.sort((a,b)=>b.pts-a.pts||b.reports-a.reports||a.time-b.time);if(!demoMode)saveBoard(all);lastEntry=entry;
   // deux classements : le public (visiteurs) et la Team Liberty (e-mail « liberty »), jamais mélangés
-  const board=all.filter(e=>!!e.team===teamMode);
+  let board=all.filter(e=>!!e.team===teamMode);
+  if(remote&&remote.board){board=(teamMode?remote.team:remote.board).slice();board.push(entry);board.sort((a,b)=>b.pts-a.pts||b.reports-a.reports||a.time-b.time);}
+  if(!demoMode)postRemote({name:entry.name,email:entry.email,contest:entry.contest,marketing:entry.marketing,team:entry.team,pts:entry.pts,reports:entry.reports,total:entry.total,crashes:entry.crashes,time:entry.time,flooz:P.flooz,id:entry.id}).then(()=>syncRemote());
   document.querySelector('#result .board h2').textContent=teamMode?'Classement Team Liberty 🏍':'Classement Green Master';
   document.querySelector('#wheelBtn b').textContent=wheelState.done?'Voir mon cadeau':'Tourne la roue Liberty Rider';
   const myRank=board.findIndex(e=>e.id===entry.id)+1;
@@ -1699,10 +1707,29 @@ document.getElementById('adminCsv').addEventListener('click',async()=>{
   catch(e){prompt('Copie ce CSV :',csv);}
 });
 document.getElementById('adminClear').addEventListener('dblclick',()=>{saveBoard([]);openAdmin();});
+/* ---------- Google Sheet (Apps Script) : source commune des parties, cadeaux, QR code et classements ---------- */
+const SHEET_KEY='gm_sheet_v1',QUEUE_KEY='gm_queue_v1';
+let remote=null,syncing=false;
+function sheetUrl(){try{return (localStorage.getItem(SHEET_KEY)||CONFIG.sheetUrl||'').trim();}catch(e){return CONFIG.sheetUrl||'';}}
+function loadQueue(){try{return JSON.parse(localStorage.getItem(QUEUE_KEY)||'[]');}catch(e){return [];}}
+function saveQueue(q){try{localStorage.setItem(QUEUE_KEY,JSON.stringify(q.slice(-200)));}catch(e){}}
+async function postRemote(payload){const u=sheetUrl();if(!u)return false;
+  try{const r=await fetch(u,{method:'POST',body:JSON.stringify(payload)});const j=await r.json();if(!j||!j.ok)throw new Error(j&&j.error||'ko');return true;}
+  catch(e){const q=loadQueue();q.push(payload);saveQueue(q);return false;}}
+async function flushQueue(){const u=sheetUrl();if(!u)return;let q=loadQueue();if(!q.length)return;saveQueue([]);for(const p of q){await postRemote(p);}}
+async function syncRemote(){const u=sheetUrl();if(!u||syncing)return null;syncing=true;
+  try{const r=await fetch(u+(u.includes('?')?'&':'?')+'action=state&t='+Date.now(),{cache:'no-store'});const j=await r.json();if(j&&j.ok){remote=j;applyRemoteConfig();flushQueue();}return j;}
+  catch(e){return null;}finally{syncing=false;}}
+function applyRemoteConfig(){if(!remote)return;if(remote.rules){CONFIG.rulesUrl=remote.rules;const l=document.getElementById('rulesLink');if(l)l.href=remote.rules;}if(remote.dpo)CONFIG.dpoContact=remote.dpo;}
+function renderSheetAdmin(){document.getElementById('sheetUrlInput').value=sheetUrl();document.getElementById('sheetOpen').href=CONFIG.sheetViewUrl;document.getElementById('sheetOk').textContent=remote?('Connecté · '+(remote.count||0)+' partie'+((remote.count||0)>1?'s':'')+' dans le Sheet'+(loadQueue().length?' · '+loadQueue().length+' en attente d\'envoi':'')):(sheetUrl()?'Pas de réponse du Sheet pour l\'instant.':'Non connecté : le jeu utilise le stockage local de cette machine.');}
+document.getElementById('sheetSave').addEventListener('click',async()=>{const u=document.getElementById('sheetUrlInput').value.trim();if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(u)){document.getElementById('sheetOk').textContent='Adresse invalide : il faut l\'URL de l\'application web, qui finit par /exec.';return;}
+  localStorage.setItem(SHEET_KEY,u);document.getElementById('sheetOk').textContent='Test en cours…';const j=await syncRemote();document.getElementById('sheetOk').textContent=j&&j.ok?'Connecté ! '+(j.count||0)+' partie'+((j.count||0)>1?'s':'')+' dans le Sheet. Cadeaux, QR code et classements viennent désormais du Sheet.':'Le Sheet ne répond pas : vérifie que le script est déployé avec accès « Tout le monde ».';});
+document.getElementById('sheetOff').addEventListener('click',()=>{localStorage.removeItem(SHEET_KEY);remote=null;renderSheetAdmin();});
+syncRemote();
 /* ---------- roue de la fortune ---------- */
 const WHEEL_KEY='gm_wheel_v1',QR_KEY='gm_qr_v1';
 const WHEEL_COLS=['#E84C2E','#4383E7','#37A67E','#F5B72B','#F090BB','#6369D0','#611C35','#242121'];
-function loadGifts(){try{const g=JSON.parse(localStorage.getItem(WHEEL_KEY)||'[]');return Array.from({length:8},(_,i)=>String(g[i]||''));}catch(e){return Array(8).fill('');}}
+function loadGifts(){if(remote&&remote.gifts)return Array.from({length:8},(_,i)=>String(remote.gifts[i]||''));try{const g=JSON.parse(localStorage.getItem(WHEEL_KEY)||'[]');return Array.from({length:8},(_,i)=>String(g[i]||''));}catch(e){return Array(8).fill('');}}
 function saveGifts(g){try{localStorage.setItem(WHEEL_KEY,JSON.stringify(g));}catch(e){}}
 const giftLabel=(g,i)=>g[i].trim()||('Cadeau '+(i+1));
 const wheelEl=document.getElementById('wheel'),wheelCv=document.getElementById('wheelCanvas'),wheelCtx=wheelCv.getContext('2d');
@@ -1738,7 +1765,7 @@ function wheelDone(i){
   document.getElementById('wheelWrap').classList.add('done');document.getElementById('wheelTitle').textContent='Trop bien !';document.getElementById('wheelHint').textContent='';
   document.getElementById('giftName').textContent=name;document.getElementById('giftBox').classList.remove('hidden');showQr();document.getElementById('qrBox').classList.remove('hidden');document.getElementById('wheelAgain').classList.remove('hidden');
   sfx('finish');confetti();setTimeout(()=>document.getElementById('giftBox').scrollIntoView({behavior:'smooth',block:'center'}),150);
-  if(lastEntry){lastEntry.gift=name;const b=loadBoard();const e=b.find(x=>x.id===lastEntry.id);if(e){e.gift=name;if(!demoMode)saveBoard(b);}}
+  if(lastEntry){lastEntry.gift=name;const b=loadBoard();const e=b.find(x=>x.id===lastEntry.id);if(e){e.gift=name;if(!demoMode)saveBoard(b);}if(!demoMode)postRemote({op:'gift',id:lastEntry.id,gift:name});}
   document.querySelector('#wheelBtn b').textContent='Voir mon cadeau';
 }
 /* confettis */
@@ -1756,7 +1783,7 @@ function confetti(burst){
     if(confParts.length||now-t0<2200)confRaf=requestAnimationFrame(step);else{confCv.style.display='none';}};
   cancelAnimationFrame(confRaf);step();
 }
-function showQr(){const q=localStorage.getItem(QR_KEY);const box=document.getElementById('qrImg');if(q){box.innerHTML='<img src="'+q.replace(/"/g,'&quot;')+'" alt="QR code">';box.style.border='0';}else{box.innerHTML='QR code<br>à venir';box.style.border='';}}
+function showQr(){const q=(remote&&remote.qr)||localStorage.getItem(QR_KEY);const box=document.getElementById('qrImg');if(q){box.innerHTML='<img src="'+q.replace(/"/g,'&quot;')+'" alt="QR code">';box.style.border='0';}else{box.innerHTML='QR code<br>à venir';box.style.border='';}}
 function openWheel(){
   resultEl.classList.add('hidden');wheelEl.classList.remove('hidden');
   const d=wheelState.done;document.getElementById('wheelWrap').classList.toggle('done',d);
@@ -1774,10 +1801,10 @@ document.getElementById('wheelAgain').addEventListener('click',()=>{wheelEl.clas
 /* ---------- menu développement : onglets, roue, QR, saut à la fin ---------- */
 document.querySelectorAll('#admin .tab[data-tab]').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('#admin .tab[data-tab]').forEach(x=>x.classList.toggle('on',x===b));
-  for(const [k,id] of [['list','admList'],['wheel','admWheel'],['qr','admQr']])document.getElementById(id).classList.toggle('hidden',b.dataset.tab!==k);
-  if(b.dataset.tab==='wheel')renderGiftGrid();if(b.dataset.tab==='qr')renderQrAdmin();
+  for(const [k,id] of [['list','admList'],['wheel','admWheel'],['qr','admQr'],['sheet','admSheet']])document.getElementById(id).classList.toggle('hidden',b.dataset.tab!==k);
+  if(b.dataset.tab==='wheel')renderGiftGrid();if(b.dataset.tab==='qr')renderQrAdmin();if(b.dataset.tab==='sheet')renderSheetAdmin();
 }));
-function renderGiftGrid(){const g=loadGifts();document.getElementById('giftGrid').innerHTML=g.map((v,i)=>'<label><span class="sw" style="background:'+WHEEL_COLS[i]+'"></span>'+(i+1)+'<input maxlength="28" data-i="'+i+'" value="'+escapeHtml(v)+'" placeholder="Cadeau '+(i+1)+'"></label>').join('');document.getElementById('giftOk').textContent='';}
+function renderGiftGrid(){const g=loadGifts();document.getElementById('giftOk').textContent='';if(remote)document.getElementById('giftOk').textContent='Google Sheet connecté : les cadeaux se modifient dans l\'onglet Config du Sheet (cadeau1 à cadeau8).';document.getElementById('giftGrid').innerHTML=g.map((v,i)=>'<label><span class="sw" style="background:'+WHEEL_COLS[i]+'"></span>'+(i+1)+'<input maxlength="28" data-i="'+i+'" value="'+escapeHtml(v)+'" placeholder="Cadeau '+(i+1)+'"'+(remote?' disabled':'')+'></label>').join('');}
 document.getElementById('giftSave').addEventListener('click',()=>{const g=Array.from(document.querySelectorAll('#giftGrid input')).map(i=>i.value.trim());saveGifts(g);document.getElementById('giftOk').textContent='Roue enregistrée.';});
 document.getElementById('giftReset').addEventListener('click',()=>{saveGifts(Array(8).fill(''));renderGiftGrid();document.getElementById('giftOk').textContent='Cases vidées.';});
 let qrPending=null;
@@ -1798,7 +1825,7 @@ function goHome(){
   document.getElementById('homeBtn').classList.add('hidden');confCv.style.display='none';
   demoMode=false;teamMode=false;document.getElementById('demoBtn').classList.remove('on');
   document.getElementById('playerName').value='';document.getElementById('playerEmail').value='';document.getElementById('cMarketing').checked=false;document.getElementById('formErr').style.display='none';
-  titleEl.classList.remove('hidden');
+  titleEl.classList.remove('hidden');syncRemote();
 }
 document.getElementById('resHome').addEventListener('click',goHome);
 document.getElementById('wheelHome').addEventListener('click',goHome);
