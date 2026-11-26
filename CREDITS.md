@@ -117,3 +117,7 @@ Les écrans (accueil, résultats, roue, tuto, menu dev) occupent tout l'écran d
 ## Alerte accident (v36)
 
 L'écran de chute reprend le principe de l'app : titre « Alerte accident », compte à rebours (3 s) avant prévenance des secours et des proches, gros bouton vert « Je vais bien » (reprend la course tout de suite) et gros bouton rouge « J'ai besoin d'aide » (les secours sont prévenus, l'ambulance arrive, reprise 2 s plus tard). Sans action, reprise automatique à la fin du compte à rebours. Course, rivaux et chrono figés pendant tout l'écran.
+
+## Mise à jour immédiate (v37)
+
+Le service worker sert désormais la page index.html en « réseau d'abord » (cache seulement hors ligne) : une nouvelle version publiée est visible dès le chargement suivant, sans double rechargement. Les autres fichiers restent en cache versionné.
