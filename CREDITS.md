@@ -99,3 +99,7 @@ Script « Green Master - Stand Lyon » déployé en application web (version 1, 
 ## Mode invité (v32)
 
 Prénom + e-mail « invité » (ou « invite ») = partie d'invité : pas d'e-mail, pas de jeu-concours, classement à part « Classement Invités », séparé du public et de la Team Liberty. Colonne « Invité » dans l'export et colonne guest dans le Sheet (script Apps Script version 2).
+
+## Mobile (v33)
+
+Les écrans (accueil, résultats, roue, tuto, menu dev) occupent tout l'écran du téléphone, en portrait comme en paysage, sans débordement horizontal. En portrait pendant la course, un écran « Tourne ton téléphone » s'affiche sur tactile. Sur tactile, les textes parlent du bouton rouge et du joystick au lieu d'ESPACE et des flèches. Mise en page compacte sous 460 px de haut (téléphone en paysage) et cartes empilées sous 520 px de large.
