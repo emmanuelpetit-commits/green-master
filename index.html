@@ -168,6 +168,16 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 #admin h1{color:var(--anthracite)}
 #adminBack{position:fixed;left:16px;top:14px;z-index:6;display:inline-flex;align-items:center;gap:8px;background:var(--anthracite);color:#fff;border:0;border-radius:999px;padding:10px 18px 10px 14px;font:700 15px var(--titre);cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.18)}
 #adminBack:hover{background:#000}
+#liveBack{position:fixed;left:16px;top:14px;z-index:6;display:inline-flex;align-items:center;gap:8px;background:var(--anthracite);color:#fff;border:0;border-radius:999px;padding:10px 18px 10px 14px;font:700 15px var(--titre);cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+#liveBoard{justify-content:flex-start;padding-top:64px;gap:12px}
+#liveBoard h1{font-size:clamp(26px,4vw,46px);margin:0}
+#liveBoard .board{max-width:760px}
+.board.big li{font-size:clamp(15px,2vw,22px);padding:8px 12px}
+.board.big .rank{width:34px;height:34px;font-size:16px}
+.board.big .nm{flex:1}
+.board.big .sub{font-size:.7em;opacity:.65;margin-left:8px;font-weight:500}
+.livetabs .tab{font-size:14px}
+#liveBoard .hint{color:#fff;opacity:.85}
 .adminbox{width:min(100%,900px);max-width:100%;overflow-x:auto;margin:auto;display:flex;flex-direction:column;gap:10px}
 .adminbox table{width:100%;display:block;overflow-x:auto;border-collapse:collapse;font-size:12px;background:#fff;border-radius:12px;overflow:hidden}
 .adminbox th,.adminbox td{padding:6px 8px;text-align:left;border-bottom:1px solid #eee}
@@ -340,11 +350,18 @@ button.pill.light{background:#fff;color:var(--anthracite)}
     <div class="actions"><button class="pill light" id="tutoPrev">Précédent</button><button class="pill" id="tutoNext">Suivant</button></div>
   </div>
 </div>
+<div id="liveBoard" class="overlay hidden">
+  <button id="liveBack" aria-label="Retour">&#8592;&nbsp; Retour</button>
+  <h1 id="liveTitle">Classement Team Liberty 🏍</h1>
+  <div class="tabs livetabs"><button class="tab on" data-board="team">Team Liberty</button><button class="tab" data-board="public">Green Master</button><button class="tab" data-board="guest">Invités</button></div>
+  <div class="board big"><ol id="liveList"></ol></div>
+  <p class="hint" id="liveInfo">Chargement…</p>
+</div>
 <div id="admin" class="overlay hidden">
   <button id="adminBack" aria-label="Retour au jeu">&#8592;&nbsp; Retour au jeu</button>
   <div class="adminbox">
     <h1>Menu développement</h1>
-    <div class="tabs"><button class="tab on" data-tab="list">Inscrits et scores</button><button class="tab" data-tab="wheel">Gérer la roue</button><button class="tab" data-tab="qr">Gérer le QR code</button><button class="tab" data-tab="sheet">Google Sheet</button><button class="tab goend" id="adminJumpEnd">▶ Aller à la fin de la course</button></div>
+    <div class="tabs"><button class="tab on" data-tab="list">Inscrits et scores</button><button class="tab" data-tab="wheel">Gérer la roue</button><button class="tab" data-tab="qr">Gérer le QR code</button><button class="tab" data-tab="sheet">Google Sheet</button><button class="tab goend" id="adminJumpEnd">▶ Aller à la fin de la course</button><button class="tab goend" id="adminLiveBoard">🏆 Classement Liberty</button></div>
     <div class="admsec" id="admList">
     <p class="hint" id="adminCount"></p>
     <div class="actions"><button class="pill" id="adminXlsx">Télécharger l'Excel (.xlsx)</button><button class="pill light" id="adminCsv">Copier en CSV</button><button class="pill light" id="adminClear">Tout effacer (double-clic)</button><button class="pill light" id="adminClose">Fermer</button></div>
@@ -1046,7 +1063,7 @@ function update(dt){
     P.timeBonus=Math.max(0,150-Math.round(P.time*0.6));P.points+=P.timeBonus;if(P.timeBonus>0)msg('Bonus efficacité +'+P.timeBonus+' pts','#F5B72B',30);
     msg('Trajet terminé','#ffffff',60);sfx('finish');
   }
-  if(state==='finished'){resultT-=dt;if(resultT<=0&&!resultShown)showResult();}
+  if(state==='finished'){resultT-=dt;if(resultT<=0&&!resultShown){resultShown=true;freshSync(3000).then(showResult);}}
 }
 
 /* ---------- 2D HUD helpers ---------- */
@@ -1823,6 +1840,19 @@ const BOARD_KEY='gm_board_v1';
 function loadBoard(){try{return JSON.parse(localStorage.getItem(BOARD_KEY)||'[]');}catch(e){return [];}}
 function saveBoard(b){try{localStorage.setItem(BOARD_KEY,JSON.stringify(b.slice(0,100)));}catch(e){}}
 let playerName='Motard';let demoMode=false;
+// synchronisation fraîche avec le Sheet, bornée dans le temps (une partie déjà en cours de sync est attendue)
+async function freshSync(ms){const t0=Date.now();while(syncing&&Date.now()-t0<ms)await new Promise(r=>setTimeout(r,100));await Promise.race([syncRemote(),new Promise(r=>setTimeout(r,ms))]);}
+function renderResultBoard(entry,board){
+  if(!board){const src=guestMode?(remote.guests||[]):teamMode?(remote.team||[]):(remote.board||[]);board=src.slice();if(!board.some(e=>String(e.id)===String(entry.id)))board.push(entry);board.sort((a,b)=>b.pts-a.pts||b.reports-a.reports||a.time-b.time);}
+  const same=e=>String(e.id)===String(entry.id);
+  const myRank=board.findIndex(e=>same(e))+1;
+  const bb=document.getElementById('resBadge');
+  if(myRank<=3){const m=['or','argent','bronze'][myRank-1];document.getElementById('resBadgeImg').src='assets/brand/gm/badge-'+m+'-national.png';document.getElementById('resBadgeTitle').textContent='Badge '+m.charAt(0).toUpperCase()+m.slice(1)+' débloqué';document.getElementById('resBadgeText').textContent='Tu es '+(myRank===1?'premier':myRank===2?'deuxième':'troisième')+(guestMode?' du classement des invités.':teamMode?' de la Team Liberty.':' du classement du stand.');bb.classList.remove('hidden');}
+  else bb.classList.add('hidden');
+  const ol=document.getElementById('board');const shown=board.slice(0,8);
+  if(myRank>8)shown.push(entry);
+  ol.innerHTML=shown.map(e=>{const r=board.indexOf(e)+1;return '<li class="'+(same(e)?'me':'')+'"><span class="rank '+(r<=3?'r'+r:'')+'">'+r+'</span><span class="nm">'+escapeHtml(e.name)+(same(e)?' (toi)':'')+'</span><span class="pt">'+e.pts+' pts</span></li>';}).join('')||'<div class="empty">Aucun score pour l’instant.</div>';
+}
 function showResult(){resultShown=true;document.getElementById('rotate').classList.remove('on');document.getElementById('homeBtn').classList.add('hidden');
   const total=hazards.length,ratio=total?P.reports/total:0;
   const protectedCount=P.reports*120+P.confirms*40;
@@ -1851,16 +1881,10 @@ function showResult(){resultShown=true;document.getElementById('rotate').classLi
   const mode=guestMode?'guest':teamMode?'team':'public',modeOf=e=>e.guest?'guest':e.team?'team':'public';
   let board=all.filter(e=>modeOf(e)===mode);
   if(remote&&remote.board){board=(guestMode?(remote.guests||[]):teamMode?remote.team:remote.board).slice();board.push(entry);board.sort((a,b)=>b.pts-a.pts||b.reports-a.reports||a.time-b.time);}
-  if(!demoMode)postRemote({name:entry.name,email:entry.email,contest:entry.contest,marketing:entry.marketing,team:entry.team,guest:entry.guest,pts:entry.pts,reports:entry.reports,total:entry.total,crashes:entry.crashes,time:entry.time,flooz:P.flooz,id:entry.id}).then(()=>syncRemote());
+  if(!demoMode)postRemote({name:entry.name,email:entry.email,contest:entry.contest,marketing:entry.marketing,team:entry.team,guest:entry.guest,pts:entry.pts,reports:entry.reports,total:entry.total,crashes:entry.crashes,time:entry.time,flooz:P.flooz,id:entry.id}).then(()=>syncRemote()).then(()=>{if(remote&&remote.board&&lastEntry===entry)renderResultBoard(entry);});
   document.querySelector('#result .board h2').textContent=guestMode?'Classement Invités 🎟':teamMode?'Classement Team Liberty 🏍':'Classement Green Master';
   document.querySelector('#wheelBtn b').textContent=wheelState.done?'Voir mon cadeau':'Tourne la roue Liberty Rider';
-  const myRank=board.findIndex(e=>e.id===entry.id)+1;
-  const bb=document.getElementById('resBadge');
-  if(myRank<=3){const m=['or','argent','bronze'][myRank-1];document.getElementById('resBadgeImg').src='assets/brand/gm/badge-'+m+'-national.png';document.getElementById('resBadgeTitle').textContent='Badge '+m.charAt(0).toUpperCase()+m.slice(1)+' débloqué';document.getElementById('resBadgeText').textContent='Tu es '+(myRank===1?'premier':myRank===2?'deuxième':'troisième')+(guestMode?' du classement des invités.':teamMode?' de la Team Liberty.':' du classement du stand.');bb.classList.remove('hidden');}
-  else bb.classList.add('hidden');
-  const ol=document.getElementById('board');const shown=board.slice(0,8);
-  if(myRank>8)shown.push(entry);
-  ol.innerHTML=shown.map(e=>{const r=board.indexOf(e)+1;return '<li class="'+(e.id===entry.id?'me':'')+'"><span class="rank '+(r<=3?'r'+r:'')+'">'+r+'</span><span class="nm">'+escapeHtml(e.name)+(e.id===entry.id?' (toi)':'')+'</span><span class="pt">'+e.pts+' pts</span></li>';}).join('')||'<div class="empty">Aucun score pour l’instant.</div>';
+  renderResultBoard(entry,board);
   resultEl.classList.remove('hidden');resultEl.scrollTop=0;
 }
 function escapeHtml(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -2044,6 +2068,24 @@ document.getElementById('muteBtn').addEventListener('click',e=>{e.stopPropagatio
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&adminEl.classList.contains('hidden')&&(state==='race'||state==='countdown'||state==='finished'))goHome();});
 document.getElementById('adminClose').addEventListener('click',backToTitle);
 document.getElementById('adminBack').addEventListener('click',backToTitle);
+/* ---------- classement en direct (menu dev → Classement Liberty, ou ?board=team|public|guest) ---------- */
+let liveMode='team',liveTimer=null;
+const liveEl=document.getElementById('liveBoard');
+function renderLive(){
+  const names={team:'Classement Team Liberty 🏍',public:'Classement Green Master',guest:'Classement Invités 🎟'};
+  document.getElementById('liveTitle').textContent=names[liveMode];
+  liveEl.querySelectorAll('.livetabs .tab').forEach(b=>b.classList.toggle('on',b.dataset.board===liveMode));
+  const list=remote?(liveMode==='team'?remote.team:liveMode==='guest'?remote.guests:remote.board)||[]:[];
+  const ol=document.getElementById('liveList');
+  ol.innerHTML=list.slice(0,30).map((e,i)=>{const r=i+1;return '<li><span class="rank '+(r<=3?'r'+r:'')+'">'+r+'</span><span class="nm">'+escapeHtml(e.name)+'<span class="sub">'+(e.reports||0)+' danger'+(e.reports>1?'s':'')+' · '+fmtTime(e.time||0)+'</span></span><span class="pt">'+e.pts+' pts</span></li>';}).join('')||'<div class="empty">'+(remote?'Aucune partie pour l’instant.':'Pas de connexion au Sheet.')+'</div>';
+  document.getElementById('liveInfo').textContent=remote?list.length+' partie'+(list.length>1?'s':'')+' · mis à jour à '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' · actualisation automatique':'Le Sheet ne répond pas.';
+}
+async function openLive(mode){liveMode=mode||liveMode;adminEl.classList.add('hidden');titleEl.classList.add('hidden');liveEl.classList.remove('hidden');renderLive();await syncRemote();renderLive();clearInterval(liveTimer);liveTimer=setInterval(async()=>{if(liveEl.classList.contains('hidden'))return;await syncRemote();renderLive();},10000);}
+function closeLive(){clearInterval(liveTimer);liveEl.classList.add('hidden');backToTitle();}
+document.getElementById('adminLiveBoard').addEventListener('click',()=>openLive());
+document.getElementById('liveBack').addEventListener('click',closeLive);
+liveEl.querySelectorAll('.livetabs .tab').forEach(b=>b.addEventListener('click',()=>{liveMode=b.dataset.board;renderLive();}));
+{const b=new URLSearchParams(location.search).get('board');if(b&&['team','public','guest'].includes(b))setTimeout(()=>openLive(b),300);}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!adminEl.classList.contains('hidden'))backToTitle();});
 document.getElementById('startBtn').addEventListener('click',()=>{goFullscreen();demoMode=false;document.getElementById('demoBtn').classList.remove('on');startRace();});
 document.getElementById('adminBtn').addEventListener('click',openAdmin);

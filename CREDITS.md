@@ -208,3 +208,8 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 - Flooz : 20 grappes au lieu de 13 ; une pièce prise par un concurrent disparaît net, et toute pièce prise réapparaît 2 s plus tard.
 - Dangers : plus aucun danger caché derrière une bosse. Chaque emplacement est vérifié : depuis 80 et 160 segments en amont, la ligne de vue caméra → danger ne coupe aucune bosse, et l'approche est droite (pas de virage sur les 80 derniers segments). Le danger « juste après le sommet » est supprimé ; gravillons et huile sont posés sur la ligne droite avant le virage, plus dedans.
 - Concurrents : chutes occasionnelles et réalistes. Sur un danger qu'ils n'ont pas évité à bonne vitesse (huile 55 %, cônes 40 %, gravillons 35 %, débris 30 %, nid-de-poule 25 %, flaque 20 %), et parfois dans un virage serré pris à plus de 90 % (environ 1 % par seconde passée dedans). Message et dérapage si c'est près de toi.
+
+## Classement fiable et page « Classement Liberty » (v56)
+
+- Bug corrigé : le classement de fin de course utilisait les données chargées à l'ouverture de la page. Quand plusieurs personnes jouaient en même temps, chacune était « première ». Désormais le jeu relit le Sheet juste avant d'afficher le résultat (3 s maximum), puis une seconde fois après l'envoi de la partie, et réaffiche le classement avec les données à jour.
+- Menu développement → « 🏆 Classement Liberty » : page plein écran avec le classement Team Liberty (onglets Green Master et Invités), 30 premiers, dangers signalés et temps, actualisée toutes les 10 s depuis le Sheet. Pour un écran dédié : `?board=team` (ou `public`, `guest`) dans l'adresse ouvre directement cette page.
