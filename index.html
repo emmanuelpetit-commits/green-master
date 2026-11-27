@@ -125,6 +125,9 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 #iosHelp li{margin:6px 0}
 .homebtn{position:fixed;left:50%;transform:translateX(-50%);top:8px;z-index:60;background:#fff;color:var(--anthracite);border:0;border-radius:999px;padding:8px 18px;font:700 14px var(--titre);cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.35)}
 .homebtn:hover{background:var(--lunaire2)}
+.mutebtn{position:fixed;right:12px;top:8px;z-index:60;width:36px;height:36px;border-radius:50%;background:#fff;border:0;padding:0;font-size:18px;line-height:36px;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.mutebtn.off{background:var(--lunaire2);opacity:.85}
+.mutebtn:hover{background:var(--lunaire2)}
 #demoBtn.on{box-shadow:0 0 0 3px rgba(255,255,255,.45)}
 /* tutoriel */
 #tuto{justify-content:flex-start}
@@ -255,6 +258,7 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 </head>
 <body>
 <button id="homeBtn" class="homebtn hidden" aria-label="Retour à l'accueil">&#8962;&nbsp; Retour à l'accueil</button>
+<button id="muteBtn" class="mutebtn" aria-label="Couper le son" title="Couper le son">&#128266;</button>
 <div id="fall">
   <img class="brand" src="assets/brand/lr-logo-horizontal-blanc.png" alt="Liberty Rider">
   <div class="top"><div class="ico"><img src="assets/brand/icons/alerte-dark.png" alt=""></div><h1>Alerte accident</h1><p id="fallText">Liberty Rider a détecté une chute. Tout va bien ?</p>
@@ -698,15 +702,25 @@ async function loadSfx(){
   sfxLoaded=true;
   for(const k of ['idle','drive','rain']){
     if(!sfxBuf[k])continue;
-    const src=AC.createBufferSource();src.buffer=sfxBuf[k];src.loop=true;
-    // on ne boucle que la partie stable de chaque enregistrement (mesurée : ralenti 3-33 s à ~43 Hz, roulage 16-54 s à ~36 Hz)
-    const d=sfxBuf[k].duration;if(d>6){if(k==='idle'){src.loopStart=4;src.loopEnd=Math.min(d-1,33);}else if(k==='drive'){src.loopStart=16;src.loopEnd=Math.min(d-1,54);}else{src.loopStart=1.5;src.loopEnd=d-1.5;}}
+    const src=AC.createBufferSource();src.loop=true;
+    // on ne boucle que la partie stable de chaque enregistrement (mesurée : ralenti 4-33 s à ~43 Hz ; FJR1300 24,2-30,4 s à ~77 Hz, bouclé avec fondu)
+    const d=sfxBuf[k].duration;
+    if(k==='drive'&&d>31){src.buffer=loopBuffer(sfxBuf[k],24.2,30.4,0.25);}
+    else{src.buffer=sfxBuf[k];if(d>6){if(k==='idle'){src.loopStart=4;src.loopEnd=Math.min(d-1,33);}else{src.loopStart=1.5;src.loopEnd=d-1.5;}}}
     const g=AC.createGain();g.gain.value=0;
     if(k==='drive'){const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=800;f.Q.value=0.7;src.connect(f);f.connect(g);loops[k]={src,gain:g,filt:f};}
     else{src.connect(g);loops[k]={src,gain:g};}
     g.connect(master);src.start();
   }
   buildSynthEngine();   // couche synthétique toujours présente : c'est elle qui monte dans les tours avec la vitesse
+}
+// extrait [start,end] d'un buffer et fond la fin dans le début pour une boucle sans clic
+function loopBuffer(buf,start,end,fade){
+  const sr=buf.sampleRate,s0=Math.floor(start*sr),s1=Math.min(buf.length,Math.floor(end*sr)),n=s1-s0,f=Math.floor(fade*sr);
+  const out=AC.createBuffer(buf.numberOfChannels,n-f,sr);
+  for(let c=0;c<buf.numberOfChannels;c++){const src=buf.getChannelData(c),dst=out.getChannelData(c);
+    for(let i=0;i<n-f;i++){let v=src[s0+f+i];if(i>=n-2*f){const t=(i-(n-2*f))/f;v=v*(1-t)+src[s0+(i-(n-2*f))]*t;}dst[i]=v;}}
+  return out;
 }
 let synth=null;
 function buildSynthEngine(){
@@ -751,8 +765,8 @@ function updateAudio(){
   const driveG=Math.min(1,Math.max(0,(sp-0.03)/0.25));
   if(loops.drive){
     loops.drive.gain.gain.setTargetAtTime(on?driveG*(throttle?0.75:0.5)*shiftDuck:0,t,0.08);
-    loops.drive.src.playbackRate.setTargetAtTime(0.9+rpm*0.9,t,0.05);
-    loops.drive.filt.frequency.setTargetAtTime(500+rpm*3500+(throttle?1500:0),t,0.08);
+    loops.drive.src.playbackRate.setTargetAtTime(0.55+rpm*0.8,t,0.05);   // ~42 Hz au plus bas régime, ~104 Hz à fond
+    loops.drive.filt.frequency.setTargetAtTime(900+rpm*5000+(throttle?2000:0),t,0.08);
   }
   if(loops.rain)loops.rain.gain.gain.setTargetAtTime(on?rainT*0.5:0,t,0.3);
   // couche synthétique : fondamentale 45 → 230 Hz, c'est elle qui donne la montée dans les tours
@@ -1123,7 +1137,7 @@ const LR_BRAND={pts:'brand/icons/prevention-light.png',logoWhite:'brand/lr-logo-
 const LR_ICONS={turn:'lr-virage-dangereux.svg',cross:'lr-intersection.svg',pothole:'lr-nid-de-poule.svg',debris:'lr-route-deformee.svg',community:'lr-danger-communautaire.svg',add:'lr-add-danger.svg',fatigue:'lr-fatigue.svg',radar:'lr-radar.svg'};
 const lrImg={};
 // Partenaires affichés une fois chacun sur un panneau au bord de la route (logos blancs du Drive, dossier « logo assurance white »)
-const PARTNERS=[{key:'april',file:'april-moto.png'},{key:'allianz',file:'allianz.png'},{key:'bp',file:'banque-populaire.png'},{key:'ce',file:'caisse-epargne.png'},{key:'groupama',file:'groupama.png'},{key:'axa',file:'axa-passion.png'},{key:'maif',file:'maif.png'},{key:'macif',file:'macif.png'},{key:'matmut',file:'matmut.png'},{key:'mdm',file:'mutuelle-des-motards.png'},{key:'ima',file:'ima.png',light:true}];
+const PARTNERS=[{key:'april',file:'april-moto.png'},{key:'allianz',file:'allianz.png'},{key:'bp',file:'banque-populaire.png'},{key:'ce',file:'caisse-epargne.png'},{key:'groupama',file:'groupama.png'},{key:'axa',file:'axa-passion.png'},{key:'maif',file:'maif.png'},{key:'macif',file:'macif.png'},{key:'matmut',file:'matmut.png'},{key:'mdm',file:'mutuelle-des-motards.png'},{key:'ima',file:'ima.png',light:true},{key:'inmotion',file:'inmotion.png'}];
 const partnerImg={};
 function loadPartners(){return Promise.all(PARTNERS.map(p=>new Promise(res=>{const im=new Image();im.onload=()=>{partnerImg[p.key]=im;res();};im.onerror=()=>res();im.src='assets/brand/partners/'+p.file;})));}
 function loadIcon(key){return new Promise(res=>{const im=new Image();im.onload=()=>{lrImg[key]=im;res();};im.onerror=()=>res();im.src='assets/'+(LR_ICONS[key]?'icons/'+LR_ICONS[key]:LR_BRAND[key]);});}
@@ -1948,6 +1962,8 @@ document.getElementById('fallHelp').addEventListener('click',()=>{if(fallT>0&&!f
 document.getElementById('resHome').addEventListener('click',goHome);
 document.getElementById('wheelHome').addEventListener('click',goHome);
 document.getElementById('homeBtn').addEventListener('click',goHome);
+function setMuted(v){muted=v;const b=document.getElementById('muteBtn');b.innerHTML=v?'&#128263;':'&#128266;';b.title=b.ariaLabel=v?'Remettre le son':'Couper le son';b.classList.toggle('off',v);}
+document.getElementById('muteBtn').addEventListener('click',e=>{e.stopPropagation();initAudio();setMuted(!muted);});setMuted(muted);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&adminEl.classList.contains('hidden')&&(state==='race'||state==='countdown'||state==='finished'))goHome();});
 document.getElementById('adminClose').addEventListener('click',backToTitle);
 document.getElementById('adminBack').addEventListener('click',backToTitle);
@@ -1967,7 +1983,7 @@ addEventListener('keydown',e=>{
   else if(c==='ArrowUp'||c==='KeyW')keys.up=true;
   else if(c==='ArrowDown'||c==='KeyS')keys.down=true;
   else if(c==='Space'&&!e.repeat)report();
-  else if(c==='KeyM'&&!e.repeat)muted=!muted;
+  else if(c==='KeyM'&&!e.repeat)setMuted(!muted);
   else if(c==='Enter'&&(state==='title'||(state==='finished'&&!resultEl.classList.contains('hidden'))))startRace();
 });
 addEventListener('keyup',e=>{
@@ -2033,7 +2049,7 @@ function loop(now){
 }
 requestAnimationFrame(loop);
 if('serviceWorker' in navigator&&location.protocol==='https:'){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
-window.G={get coins(){return coins;},wipeout,segs:()=>segments,keys,update,render,startRace,report,currentRank,sfxLoaded:()=>Object.keys(sfxBuf),loops:()=>Object.keys(loops),ac:()=>AC&&AC.state,hazards:()=>hazards,copAlerts:()=>copAlerts,crossings:()=>crossings,wrapDelta,segLen,playerZ,scene,renderer,camera,get P(){return P;},get state(){return state;},rivals:()=>rivals,ents:()=>ents,pos:()=>position,setPos:z=>{position=z;},trackLen:()=>trackLen,ready:()=>assetsReady,eng:()=>({rpm:+engRpm.toFixed(2),gear:engGear,sp:+(P.speed/maxSpeed).toFixed(2),rate:loops.drive?+loops.drive.src.playbackRate.value.toFixed(2):null,driveGain:loops.drive?+loops.drive.gain.gain.value.toFixed(2):null,idleGain:loops.idle?+loops.idle.gain.gain.value.toFixed(2):null,synthGain:synth?+synth.mix.gain.value.toFixed(3):null})};
+window.G={get coins(){return coins;},wipeout,segs:()=>segments,keys,update,render,startRace,report,currentRank,sfxLoaded:()=>Object.keys(sfxBuf),loops:()=>Object.keys(loops),ac:()=>AC&&AC.state,hazards:()=>hazards,copAlerts:()=>copAlerts,crossings:()=>crossings,wrapDelta,segLen,playerZ,scene,renderer,camera,get P(){return P;},get state(){return state;},rivals:()=>rivals,ents:()=>ents,pos:()=>position,setPos:z=>{position=z;},trackLen:()=>trackLen,ready:()=>assetsReady,eng:()=>({rpm:+engRpm.toFixed(2),gear:engGear,sp:+(P.speed/maxSpeed).toFixed(2),rate:loops.drive?+loops.drive.src.playbackRate.value.toFixed(2):null,driveGain:loops.drive?+loops.drive.gain.gain.value.toFixed(2):null,idleGain:loops.idle?+loops.idle.gain.gain.value.toFixed(2):null,synthGain:synth?+synth.mix.gain.value.toFixed(3):null,loopDur:loops.drive?+loops.drive.src.buffer.duration.toFixed(2):null,muted})};
 </script>
 </body>
 </html>

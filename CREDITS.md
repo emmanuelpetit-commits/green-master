@@ -153,3 +153,9 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 - Chaque partenaire a exactement un panneau publicitaire sur le parcours, dans un ordre tiré au sort à chaque partie : April Moto, Allianz, Banque Populaire, Caisse d'Épargne, Groupama, AXA Passion, MAIF, Macif, Matmut, Mutuelle des Motards, IMA. Les autres panneaux (le premier et trois autres) sont Liberty Rider. Covéa volontairement absent (pas encore partenaire).
 - Logos : fichiers blancs du Drive, dossier « logo assurance white » (Drive partagé Marketing), IMA depuis « logoIMA.png ». Copiés dans `assets/brand/partners/`.
 - Son moteur : en attendant un nouvel enregistrement, la couche synthétique est coupée et la boucle de roulage n'est plus accélérée qu'entre 0,9× et 1,8× (le modèle à 4 rapports reste).
+
+## Son moteur FJR1300, bouton son, panneau In&motion (v43)
+
+- Nouveau son de roulage : « Yamaha FJR1300 2001 Sport Touring Motorcycle, Driving, Fast, Engine, Perspective » (Epidemic Sound, fourni par Emmanuel). Le jeu ne boucle que le plateau stable de 24,2 à 30,4 s (~77 Hz), avec un fondu de 0,25 s pour une boucle sans clic. Hauteur de 0,55× à 1,35× selon le régime (modèle à 4 rapports conservé), filtre qui s'ouvre aux gaz.
+- Bouton rond blanc en haut à droite de la bande noire pour couper ou remettre le son (même effet que la touche M). Paramètre d'URL `?mute=1` pour démarrer en silence.
+- Panneau In&motion ajouté (logo « IN&MOTION AIRBAG » extrait du visuel « In & Motion.png » du Drive, passé en blanc). 12 partenaires, 16 panneaux.

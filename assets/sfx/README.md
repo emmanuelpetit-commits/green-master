@@ -6,7 +6,7 @@ retombe sur ses sons synthétiques pour les autres. Fichiers officiels télécha
 | Fichier | Usage | Titre Epidemic Sound | ID |
 |---|---|---|---|
 | engine-idle.mp4 (AAC) | moteur au ralenti (boucle sur la partie centrale) | Vehicles, Motorcycle, Yamaha YZF R6 2008, Sport Bike, Turn On, Idle, Turn Off, Engine Perspective | 789a07c8-a596-49e6-a5eb-d362d4831170 |
-| engine-drive.mp3 | moteur en roulage (boucle, mixé selon la vitesse) | Vehicles, Motorcycle, Yamaha DragStar 650 1997, Cruiser Motorcycle, Driving Fast, Engine Perspective | 03e231e1-e1ba-4199-bbf5-74b9141dead7 |
+| engine-drive.mp3 | moteur en roulage (boucle sur le plateau 24,2–30,4 s, hauteur suivant le régime) | Vehicles, Motorcycle, Yamaha FJR1300 2001 Sport Touring Motorcycle, Driving, Fast, Engine, Perspective | (fichier fourni par Emmanuel, 27/11/2026) |
 | ping.mp3 | danger signalé | User Interface, Alert, Notification, Attention, Positive, Cute, Short 06 | 3e120025-28a1-4c54-80c9-083d83e2d1a5 |
 | alert.mp3 | alerte communautaire | User Interface, Alert, Notifications, Notification, Ping, Gentle | 8a7d530f-08e5-40d6-a970-cacf26b52c10 |
 | cop.mp3 | alerte copilote | User Interface, Alert, Warnings, Alert, Suggestion | bfdd24b9-77cc-48f8-b8a5-84dc4dd4f089 |
