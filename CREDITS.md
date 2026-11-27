@@ -197,3 +197,8 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 ## Illustration Flooz sur l'accueil (v53)
 
 - Le bloc jeu-concours affiche l'illustration officielle des trois pièces Flooz (nœud « Group 17 » du Figma Product 2026, page Centre d'activité), exportée en SVG via Figma dans Chrome (les pièces y sont des images intégrées).
+
+## Crissement coupé à la réaccélération, pièces pour les concurrents (v54)
+
+- Le crissement de frein s'éteint en 40 ms dès qu'on réaccélère, au lieu de jouer jusqu'au bout.
+- Les concurrents ramassent les Flooz quand ils passent dessus (petit message si c'est devant toi) : la pièce disparaît pour toi. Toute pièce ramassée (par toi ou par eux) réapparaît 6 s plus tard, comme dans Mario Kart.

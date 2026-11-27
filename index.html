@@ -628,10 +628,12 @@ function hazardEffect(h,sp,seg){
 function updateHazards(dt){
   const pz=position+playerZ,ps=playerSeg(),sp=P.speed/maxSpeed,seg=findSegment(pz);
   for(const c of coins){
-    if(c.taken){c.t+=dt;continue;}
+    if(c.taken){c.t+=dt;if(c.t>6){c.taken=false;c.t=0;}continue;}   // réapparition après 6 s, comme dans Mario Kart
     const rel=relSeg(c.seg,ps);
     if(rel<-2)continue;
-    if(rel<=1&&!P.crashed&&overlap(P.x,BIKE_COL,c.offset,0.45,1)){c.taken=true;c.t=0;P.flooz++;P.points+=5;msg('+1 Flooz  ·  +5 pts','#F5B72B',26);sfx('coin');}
+    if(rel<=1&&!P.crashed&&overlap(P.x,BIKE_COL,c.offset,0.45,1)){c.taken=true;c.t=0;P.flooz++;P.points+=5;msg('+1 Flooz  ·  +5 pts','#F5B72B',26);sfx('coin');continue;}
+    // un concurrent qui passe dessus la ramasse : elle disparaît pour toi jusqu'à sa réapparition
+    {for(const r of rivals){if(r.crashed)continue;const rr=relSeg(c.seg,rivalSeg(r));if(rr<=1&&rr>-1&&overlap(r.offset,r.w,c.offset,0.45,1)){c.taken=true;c.t=0;c.byRival=true;if(rel>0&&rel<40)msg(r.name+' ramasse un Flooz','#F5B72B',20);break;}}}
   }
   P.reportCd-=dt;P.reportFlash=Math.max(0,P.reportFlash-dt);
   for(const h of hazards){
@@ -787,7 +789,7 @@ function updateAudio(){
     synth.mix.gain.setTargetAtTime(on&&sp>0.03&&!loops.drive?synthG:0,t,0.08);   // couche synthétique coupée tant que l'enregistrement est là (en attente d'un nouveau son)
   }
 }
-function playBuf(k,gain,rate){const s=AC.createBufferSource();s.buffer=sfxBuf[k];if(rate)s.playbackRate.value=rate;const g=AC.createGain();g.gain.value=gain||0.6;s.connect(g);g.connect(master);s.start();}
+function playBuf(k,gain,rate){const s=AC.createBufferSource();s.buffer=sfxBuf[k];if(rate)s.playbackRate.value=rate;const g=AC.createGain();g.gain.value=gain||0.6;s.connect(g);g.connect(master);s.start();return {src:s,gain:g};}
 function sfx(kind){
   if(!AC||muted)return;
   if(kind==='whiff')kind='error';
@@ -854,7 +856,8 @@ function updatePlayer(dt){
     // freiner = lâcher l'accélérateur ou freiner : crissement au moment où on commence, à bonne vitesse, puis au plus une fois par 1,2 s
     const brk=(keys.down||!keys.up)&&state==='race'&&!P.crashed;
     P.brakeCd=(P.brakeCd||0)-dt;
-    if(brk&&!P.wasBraking&&sp>0.35&&P.brakeCd<=0){P.brakeCd=1.2;if(AC&&!muted&&sfxBuf.brake)playBuf('brake',0.25+sp*0.35,0.9+sp*0.25);}
+    if(brk&&!P.wasBraking&&sp>0.35&&P.brakeCd<=0){P.brakeCd=1.2;if(AC&&!muted&&sfxBuf.brake)P.brakeSnd=playBuf('brake',0.25+sp*0.35,0.9+sp*0.25);}
+    if(!brk&&P.brakeSnd){const t=AC.currentTime;P.brakeSnd.gain.gain.setTargetAtTime(0,t,0.04);try{P.brakeSnd.src.stop(t+0.25);}catch(e){}P.brakeSnd=null;}   // on réaccélère : le crissement s'éteint aussitôt
     P.wasBraking=brk;
     if(Math.abs(P.x)>1){
       if(P.speed>offLimit)P.speed+=offDecel*dt;
