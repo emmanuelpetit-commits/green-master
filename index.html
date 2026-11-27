@@ -522,6 +522,14 @@ function placeHazards(){
   const N=segments.length,used=[];
   const free=(seg,gap)=>used.every(u=>Math.abs(u-seg)>gap);
   const take=seg=>used.push(seg);
+  // un danger n'est posé que là où on le voit venir : depuis 80 et 160 segments en amont, aucune bosse ne coupe la ligne de vue (caméra à camH au-dessus de la route), et l'approche est droite
+  const yAt=k=>segments[Math.max(0,Math.min(N-1,k))].p1.world.y;
+  const visible=seg=>{
+    if(seg<170||seg>N-120)return false;
+    for(let k=seg-50;k<=seg;k++)if(Math.abs(segments[k].curve)>=4)return false;
+    for(const D of [70,140]){const cy=yAt(seg-D)+camH,ty=yAt(seg);for(let k=seg-D+1;k<seg;k++){const line=cy+(ty-cy)*(k-(seg-D))/D;if(yAt(k)>line+90)return false;}}
+    return true;
+  };
   let i=200;
   while(i<N-300){
     if(Math.abs(segments[i].curve)>=4){let j=i;while(j<N-1&&Math.abs(segments[j].curve)>=4)j++;
@@ -535,14 +543,13 @@ function placeHazards(){
       let top=k;for(let m=k-70;m<k+70;m++)if(segments[m].p1.world.y>segments[top].p1.world.y)top=m;
       if(copAlerts.every(c=>c.type!=='crest'||Math.abs(c.seg-top)>200)){
         copAlerts.push({type:'crest',seg:top-25});
-        if(rnd()<0.6&&free(top+30,150)){hazards.push(mkHaz(pick(['stalled','works','animal']),top+30));take(top+30);}
       }
       k=top+60;
     }
   }
   for(let z=0;z<2;z++){
     const start=Math.floor(N*(0.25+z*0.4)+rand(-200,200)),end=start+550;rainZones.push({start,end});copAlerts.push({type:'rain',seg:start-40});
-    for(let p=0;p<3;p++){const s=randInt(start+60,end-60);if(free(s,120)){hazards.push(mkHaz('puddle',s));take(s);}}
+    for(let p=0;p<3;p++){for(let tries=0;tries<40;tries++){const s=randInt(start+60,end-60);if(free(s,120)&&visible(s)){hazards.push(mkHaz('puddle',s));take(s);break;}}}
   }
   let made=0;
   for(let k=500;k<N-400&&made<3;k+=randInt(900,1400)){
@@ -550,22 +557,22 @@ function placeHazards(){
     if(s<N-400&&free(s,200)){copAlerts.push({type:'cross',seg:s});crossings.push({seg:s,state:'wait',x:-2.6});take(s);made++;}
   }
   for(const c of copAlerts.filter(c=>c.type==='turn').slice(0,6)){
-    if(rnd()<0.6&&free(c.seg+40,120)){const t=rnd()<0.5?'gravel':'oil';hazards.push(mkHaz(t,c.seg+40));take(c.seg+40);if(t==='oil')copAlerts.push({type:'slippery',seg:c.seg-20});}
+    const sg=c.seg-70;if(rnd()<0.6&&free(sg,120)&&visible(sg)){const t=rnd()<0.5?'gravel':'oil';hazards.push(mkHaz(t,sg));take(sg);if(t==='oil')copAlerts.push({type:'slippery',seg:sg-60});}
   }
   const wanted=['puddle','oil','pothole','pothole','pothole','works','works','animal','debris','debris','gravel','oil','puddle','pothole','stalled'];
   for(const t of wanted){
-    for(let tries=0;tries<60;tries++){
+    for(let tries=0;tries<400;tries++){
       const s=randInt(350,N-350);
       const okCurve=(t==='works'||t==='stalled')?Math.abs(segments[s].curve)<2:true;
-      if(okCurve&&free(s,170)){hazards.push(mkHaz(t,s));take(s);break;}
+      if(okCurve&&free(s,170)&&visible(s)){hazards.push(mkHaz(t,s));take(s);break;}
     }
   }
   hazards.sort((a,b)=>a.seg-b.seg);hazards.forEach((h,i)=>h.id=i);
   copAlerts.sort((a,b)=>a.seg-b.seg);
   // Flooz : quelques petites grappes de pièces sur la route, loin des dangers
   let groups=0;
-  for(let tries=0;tries<800&&groups<13;tries++){
-    const s=randInt(300,N-300);if(!free(s,90)||Math.abs(segments[s].curve)>=5)continue;
+  for(let tries=0;tries<1500&&groups<20;tries++){
+    const s=randInt(300,N-300);if(!free(s,70)||Math.abs(segments[s].curve)>=5||!visible(s))continue;
     const lane=pick([-0.55,0,0.55]),n=pick([3,4,4,5]);
     for(let i=0;i<n;i++)coins.push({seg:s+i*5,offset:lane,taken:false,t:0});
     take(s);take(s+n*5);groups++;
@@ -573,7 +580,7 @@ function placeHazards(){
   coins.sort((a,b)=>a.seg-b.seg);
 }
 function resetHazards(){
-  for(const c of coins){c.taken=false;c.t=0;}
+  for(const c of coins){c.taken=false;c.t=0;c.byRival=false;}
   for(const h of hazards){h.reported=false;h.by=null;h.community=false;h.alertBy=null;h.missed=false;h.passed=false;h.crossed=false;h.hitMe=false;h.rivalDone=new Set();h.animState='wait';h.animX=-2;}
   for(const c of crossings){c.state='wait';c.x=-2.6;}
   for(const c of copAlerts)c.announced=false;
@@ -628,7 +635,7 @@ function hazardEffect(h,sp,seg){
 function updateHazards(dt){
   const pz=position+playerZ,ps=playerSeg(),sp=P.speed/maxSpeed,seg=findSegment(pz);
   for(const c of coins){
-    if(c.taken){c.t+=dt;if(c.t>6){c.taken=false;c.t=0;}continue;}   // réapparition après 6 s, comme dans Mario Kart
+    if(c.taken){c.t+=dt;if(c.t>2){c.taken=false;c.t=0;c.byRival=false;}continue;}   // réapparition après 2 s, comme dans Mario Kart
     const rel=relSeg(c.seg,ps);
     if(rel<-2)continue;
     if(rel<=1&&!P.crashed&&overlap(P.x,BIKE_COL,c.offset,0.45,1)){c.taken=true;c.t=0;P.flooz++;P.points+=5;msg('+1 Flooz  ·  +5 pts','#F5B72B',26);sfx('coin');continue;}
@@ -835,7 +842,7 @@ function endFall(){
 function knockdown(r,dir,credit,text){
   r.crashed=true;r.crashT=3;r.crashDir=dir||1;r.hp=0;r.animT=0;
   if(credit){P.knockdowns++;sfx('crash');}
-  msg(text,credit?'#ffd23f':'#cfd8dc',credit?44:28);
+  if(text)msg(text,credit?'#ffd23f':'#cfd8dc',credit?44:28);
 }
 function updatePlayer(dt){
   const seg=findSegment(position+playerZ);
@@ -958,6 +965,19 @@ function updateRival(r,dt){
   r.offset+=steer*dt*(0.9+urgency*1.4);
   r.lean=lerp(r.lean,steer*0.3,dt*4);
   const step=dt*r.speed;r.z=increase(r.z,step,trackLen);r.dist+=step;
+  // chutes réalistes, de temps en temps : un danger mal négocié ou un virage serré pris trop vite
+  {const rs=rivalSeg(r),spr=r.speed/maxSpeed,near=Math.abs(dz)<segLen*45;
+   for(const h of hazards){
+     if(h.type==='animal'||h.type==='stalled'||!HAZ[h.type].localized)continue;
+     const rel=relSeg(h.seg,rs);if(rel>0||rel<-h.len)continue;
+     h.rivalHit=h.rivalHit||new Set();if(h.rivalHit.has(r.name))continue;h.rivalHit.add(r.name);
+     if(!overlap(r.offset,r.w,h.offset,0.45,1)||spr<0.45)continue;
+     const p={oil:0.55,gravel:0.35,puddle:0.2,pothole:0.25,debris:0.3,works:0.4}[h.type]||0.2;
+     if(R()<p){knockdown(r,r.offset>h.offset?1:-1,false,near?r.name+' chute sur '+HAZ[h.type].label.toLowerCase()+' !':'');if(near)sfx('skid');break;}
+   }
+   const rcv=segments[Math.max(0,Math.min(segments.length-1,rs))].curve;
+   if(!r.crashed&&Math.abs(rcv)>=4&&spr>0.9&&R()<dt*0.012){knockdown(r,Math.sign(rcv)||1,false,near?r.name+' part à la faute dans le virage !':'');if(near)sfx('skid');}
+  }
   if(r.lead)return;
   for(const c of ents){
     if(c.type!=='car')continue;
@@ -1654,7 +1674,7 @@ function render3D(){
   for(const c of coins){
     if(!c.obj){c.obj=makeFlooz();scene.add(c.obj);}
     const dz=wrapDelta(c.seg*segLen-position);const k=(dz+zOff)/segLen;
-    if(k<0.6||k>=drawDist-2||(c.taken&&c.t>0.45)){c.obj.visible=false;continue;}
+    if(k<0.6||k>=drawDist-2||(c.taken&&(c.byRival||c.t>0.45))){c.obj.visible=false;continue;}
     const n=Math.floor(k),pct=k-n;
     const cx=lerp(xs[n],xs[n+1],pct)+c.offset*HW,cy=lerp(ys[n],ys[n+1],pct),cz=lerp(zs[n],zs[n+1],pct);
     const rise=c.taken?c.t*5:0,sc=c.taken?Math.max(0.01,1-c.t*2.2):1;

@@ -202,3 +202,9 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 
 - Le crissement de frein s'éteint en 40 ms dès qu'on réaccélère, au lieu de jouer jusqu'au bout.
 - Les concurrents ramassent les Flooz quand ils passent dessus (petit message si c'est devant toi) : la pièce disparaît pour toi. Toute pièce ramassée (par toi ou par eux) réapparaît 6 s plus tard, comme dans Mario Kart.
+
+## Flooz, dangers visibles, chutes des concurrents (v55)
+
+- Flooz : 20 grappes au lieu de 13 ; une pièce prise par un concurrent disparaît net, et toute pièce prise réapparaît 2 s plus tard.
+- Dangers : plus aucun danger caché derrière une bosse. Chaque emplacement est vérifié : depuis 80 et 160 segments en amont, la ligne de vue caméra → danger ne coupe aucune bosse, et l'approche est droite (pas de virage sur les 80 derniers segments). Le danger « juste après le sommet » est supprimé ; gravillons et huile sont posés sur la ligne droite avant le virage, plus dedans.
+- Concurrents : chutes occasionnelles et réalistes. Sur un danger qu'ils n'ont pas évité à bonne vitesse (huile 55 %, cônes 40 %, gravillons 35 %, débris 30 %, nid-de-poule 25 %, flaque 20 %), et parfois dans un virage serré pris à plus de 90 % (environ 1 % par seconde passée dedans). Message et dérapage si c'est près de toi.
