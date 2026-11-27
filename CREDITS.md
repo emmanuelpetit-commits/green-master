@@ -159,3 +159,10 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 - Nouveau son de roulage : « Yamaha FJR1300 2001 Sport Touring Motorcycle, Driving, Fast, Engine, Perspective » (Epidemic Sound, fourni par Emmanuel). Le jeu ne boucle que le plateau stable de 24,2 à 30,4 s (~77 Hz), avec un fondu de 0,25 s pour une boucle sans clic. Hauteur de 0,55× à 1,35× selon le régime (modèle à 4 rapports conservé), filtre qui s'ouvre aux gaz.
 - Bouton rond blanc en haut à droite de la bande noire pour couper ou remettre le son (même effet que la touche M). Paramètre d'URL `?mute=1` pour démarrer en silence.
 - Panneau In&motion ajouté (logo « IN&MOTION AIRBAG » extrait du visuel « In & Motion.png » du Drive, passé en blanc). 12 partenaires, 16 panneaux.
+
+## Fin de course silencieuse, invulnérabilité, concurrents, gravillons (v44)
+
+- Le moteur (et la pluie) ne jouent que pendant le compte à rebours et la course : silence sur l'accueil et l'écran de résultats.
+- Après une chute, le pilote est invulnérable 1,6 s en se relevant (il clignote) : il traverse la voiture ou le danger qui l'a fait tomber, aucun danger ni collision ne compte pendant ce temps.
+- Concurrents : choix de voie par score (voitures, autres concurrents, joueur et dangers devant ; interdiction de se rabattre sur quelqu'un à côté), freinage derrière plus lent, braquage plus vif quand c'est urgent, et 4 fois moins de chutes sur les voitures.
+- Gravillons : nappe de sable claire bordée de sombre, gros cailloux contrastés, sur une seule voie (0,8 largeur de voie) au lieu de toute la route, donc évitable ; glissade (vitesse −25 %, −10 PV) au-dessus de 45 % de la vitesse, chute seulement à plus de 75 % dans un virage serré.
