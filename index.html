@@ -696,10 +696,14 @@ async function loadSfx(){
   for(const k of ['idle','drive','rain']){
     if(!sfxBuf[k])continue;
     const src=AC.createBufferSource();src.buffer=sfxBuf[k];src.loop=true;
-    const d=sfxBuf[k].duration;if(d>6){const trim=k==='idle'?7.5:1.5;src.loopStart=trim;src.loopEnd=d-trim;}
-    const g=AC.createGain();g.gain.value=0;src.connect(g);g.connect(master);src.start();loops[k]={src,gain:g};
+    // on ne boucle que la partie stable de chaque enregistrement (mesurée : ralenti 3-33 s à ~43 Hz, roulage 16-54 s à ~36 Hz)
+    const d=sfxBuf[k].duration;if(d>6){if(k==='idle'){src.loopStart=4;src.loopEnd=Math.min(d-1,33);}else if(k==='drive'){src.loopStart=16;src.loopEnd=Math.min(d-1,54);}else{src.loopStart=1.5;src.loopEnd=d-1.5;}}
+    const g=AC.createGain();g.gain.value=0;
+    if(k==='drive'){const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=800;f.Q.value=0.7;src.connect(f);f.connect(g);loops[k]={src,gain:g,filt:f};}
+    else{src.connect(g);loops[k]={src,gain:g};}
+    g.connect(master);src.start();
   }
-  if(!loops.idle&&!loops.drive)buildSynthEngine();
+  buildSynthEngine();   // couche synthétique toujours présente : c'est elle qui monte dans les tours avec la vitesse
 }
 let synth=null;
 function buildSynthEngine(){
@@ -716,25 +720,47 @@ function buildSynthEngine(){
   pulse.connect(filt);filt.connect(mix);mix.connect(master);
   synth={mix,filt,lfo,o1,o2,o3,ng};
 }
+// Modèle moteur : 4 rapports. Dans chaque rapport le régime monte avec la vitesse, puis retombe au passage du suivant.
+const GEARS=[0,0.2,0.42,0.68,1.0];
+let engRpm=0.1,engGear=1,engShift=0,audioT=0;
+function engineTarget(sp,throttle){
+  let g=1;while(g<GEARS.length-1&&sp>=GEARS[g])g++;
+  const lo=GEARS[g-1],hi=GEARS[g],f=Math.min(1,Math.max(0,(sp-lo)/(hi-lo)));
+  if(g!==engGear){engGear=g;engShift=0.18;}     // passage de rapport : petit creux de régime et de volume
+  // à fond : 1.0 en dernier rapport ; au pied levé le régime suit la vitesse mais sans monter dans les tours
+  return sp<0.03?0.1:(throttle?0.34+0.66*f:0.26+0.5*f);
+}
 function updateAudio(){
   if(!AC)return;
   if(AC.state==='suspended')AC.resume();
-  const t=AC.currentTime,sp=P.speed/maxSpeed,on=!muted&&state!=='title';
-  const throttle=keys.up&&state==='race'&&!P.crashed;
-  // à l'arrêt : ralenti seul, hauteur naturelle ; coup de gaz si on accélère sans rouler ; le roulage n'entre qu'avec la vitesse
-  const blip=throttle?Math.max(0,0.35-sp*0.9):0;
-  // ralenti : seulement à l'arrêt et au tout début, éteint dès 35 % de la vitesse ; roulage : entre dès qu'on roule et porte tout le reste
-  const idleG=Math.max(0,1-sp/0.35),driveG=Math.pow(Math.min(1,Math.max(0,(sp-0.04)/0.9)),1.1);
-  if(loops.idle){loops.idle.gain.gain.setTargetAtTime(on?0.55*idleG:0,t,0.12);loops.idle.src.playbackRate.setTargetAtTime(1.0+sp*0.3+blip,t,throttle?0.25:0.5);}
-  if(loops.drive){loops.drive.gain.gain.setTargetAtTime(on?driveG*0.7*(throttle?1:0.8):0,t,0.15);loops.drive.src.playbackRate.setTargetAtTime(0.62+sp*0.7,t,0.2);}
+  const t=AC.currentTime,dt=audioT?Math.min(0.1,t-audioT):0.016;audioT=t;
+  const sp=Math.min(1.08,P.speed/maxSpeed),on=!muted&&state!=='title';
+  const throttle=keys.up&&state==='race'&&!P.crashed&&fallT<=0;
+  const target=engineTarget(sp,throttle);
+  engShift=Math.max(0,engShift-dt);
+  const k=target>engRpm?(throttle?4.5:2.5):3.5;engRpm+=(target-engRpm)*Math.min(1,dt*k);
+  const rpm=engRpm,shiftDuck=engShift>0?0.55:1;
+  // ralenti : seulement à l'arrêt ; coup de gaz si on accélère sans rouler
+  const blip=throttle&&sp<0.08?0.3:0;
+  const idleG=Math.max(0,1-sp/0.1);
+  if(loops.idle){loops.idle.gain.gain.setTargetAtTime(on?0.55*idleG:0,t,0.1);loops.idle.src.playbackRate.setTargetAtTime(1.0+blip,t,0.2);}
+  // roulage : la hauteur suit le régime (0.85 → 2.4, soit ~30 à 90 Hz de fondamentale), le filtre s'ouvre avec les gaz
+  const driveG=Math.min(1,Math.max(0,(sp-0.03)/0.25));
+  if(loops.drive){
+    loops.drive.gain.gain.setTargetAtTime(on?driveG*(throttle?0.75:0.5)*shiftDuck:0,t,0.08);
+    loops.drive.src.playbackRate.setTargetAtTime(0.85+rpm*1.55,t,0.05);
+    loops.drive.filt.frequency.setTargetAtTime(500+rpm*3500+(throttle?1500:0),t,0.08);
+  }
   if(loops.rain)loops.rain.gain.gain.setTargetAtTime(on?rainT*0.5:0,t,0.3);
+  // couche synthétique : fondamentale 45 → 230 Hz, c'est elle qui donne la montée dans les tours
   if(synth){
-    const rpm=0.12+sp*0.88,f0=34+rpm*150;          // fundamental 34-184 Hz
-    synth.o1.frequency.setTargetAtTime(f0,t,0.08);synth.o2.frequency.setTargetAtTime(f0*2.01,t,0.08);synth.o3.frequency.setTargetAtTime(f0*0.5,t,0.08);
-    synth.lfo.frequency.setTargetAtTime(f0*0.5,t,0.08);
-    synth.filt.frequency.setTargetAtTime(260+rpm*1500+(keys.up?500:0),t,0.12);
-    synth.ng.gain.setTargetAtTime(0.03+sp*0.12,t,0.2);
-    synth.mix.gain.setTargetAtTime(on?0.16+sp*0.14:0,t,0.12);
+    const f0=45+rpm*185;
+    synth.o1.frequency.setTargetAtTime(f0,t,0.05);synth.o2.frequency.setTargetAtTime(f0*2.01,t,0.05);synth.o3.frequency.setTargetAtTime(f0*0.5,t,0.05);
+    synth.lfo.frequency.setTargetAtTime(f0*0.5,t,0.05);
+    synth.filt.frequency.setTargetAtTime(220+rpm*2600+(throttle?600:0),t,0.08);
+    synth.ng.gain.setTargetAtTime(0.02+rpm*0.1,t,0.2);
+    const synthG=loops.drive?(0.03+rpm*0.16)*driveG*(throttle?1:0.7)*shiftDuck:0.16+rpm*0.14;
+    synth.mix.gain.setTargetAtTime(on&&sp>0.03?synthG:0,t,0.08);
   }
 }
 function playBuf(k,gain,rate){const s=AC.createBufferSource();s.buffer=sfxBuf[k];if(rate)s.playbackRate.value=rate;const g=AC.createGain();g.gain.value=gain||0.6;s.connect(g);g.connect(master);s.start();}
@@ -1999,7 +2025,7 @@ function loop(now){
 }
 requestAnimationFrame(loop);
 if('serviceWorker' in navigator&&location.protocol==='https:'){addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
-window.G={get coins(){return coins;},wipeout,segs:()=>segments,keys,update,render,startRace,report,currentRank,sfxLoaded:()=>Object.keys(sfxBuf),loops:()=>Object.keys(loops),ac:()=>AC&&AC.state,hazards:()=>hazards,copAlerts:()=>copAlerts,crossings:()=>crossings,wrapDelta,segLen,playerZ,scene,renderer,camera,get P(){return P;},get state(){return state;},rivals:()=>rivals,ents:()=>ents,pos:()=>position,setPos:z=>{position=z;},trackLen:()=>trackLen,ready:()=>assetsReady};
+window.G={get coins(){return coins;},wipeout,segs:()=>segments,keys,update,render,startRace,report,currentRank,sfxLoaded:()=>Object.keys(sfxBuf),loops:()=>Object.keys(loops),ac:()=>AC&&AC.state,hazards:()=>hazards,copAlerts:()=>copAlerts,crossings:()=>crossings,wrapDelta,segLen,playerZ,scene,renderer,camera,get P(){return P;},get state(){return state;},rivals:()=>rivals,ents:()=>ents,pos:()=>position,setPos:z=>{position=z;},trackLen:()=>trackLen,ready:()=>assetsReady,eng:()=>({rpm:+engRpm.toFixed(2),gear:engGear,sp:+(P.speed/maxSpeed).toFixed(2),rate:loops.drive?+loops.drive.src.playbackRate.value.toFixed(2):null,driveGain:loops.drive?+loops.drive.gain.gain.value.toFixed(2):null,idleGain:loops.idle?+loops.idle.gain.gain.value.toFixed(2):null,synthGain:synth?+synth.mix.gain.value.toFixed(3):null})};
 </script>
 </body>
 </html>

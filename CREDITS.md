@@ -139,3 +139,11 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 
 - Le script Google range chaque partie dans l'onglet qui correspond : « Parties » pour les visiteurs du salon (c'est l'onglet à exporter pour le tirage), « Team Liberty » pour l'e-mail `liberty`, « Invités » pour l'e-mail `invité`. Les onglets sont créés automatiquement avec leurs en-têtes.
 - Le cadeau de la roue est complété dans le bon onglet. Les trois classements du jeu lisent chacun leur onglet.
+
+## Son moteur refait, lié à la vitesse (v41)
+
+- Diagnostic : l'enregistrement de roulage (DragStar 650) a une fondamentale d'environ 36 Hz, plus basse que celle du ralenti (43 Hz). Même accéléré de 30 %, il sonnait comme un ralenti à pleine vitesse.
+- Nouveau modèle : 4 rapports. Dans chaque rapport le régime monte avec la vitesse, puis retombe au passage du suivant (petit creux de volume). À fond en 4e, régime maximal.
+- La boucle de roulage est lue entre 0,85× et 2,4× selon le régime (fondamentale ~30 à 90 Hz), avec un filtre qui s'ouvre aux gaz et se ferme au pied levé. Seule la partie stable de l'enregistrement (16 à 54 s) est bouclée.
+- Une couche synthétique (45 à 230 Hz) monte dans les tours avec le régime : c'est elle qui donne la sensation de « plein fer ».
+- Le ralenti ne joue plus qu'à l'arrêt (sous 10 % de la vitesse).
