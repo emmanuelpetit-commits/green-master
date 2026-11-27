@@ -72,6 +72,11 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 .srow span{font-size:clamp(12px,1.5vw,14px);opacity:.9}
 .srow .pts{margin-left:auto;font-family:var(--titre);font-weight:700;font-size:clamp(14px,1.8vw,17px);white-space:nowrap}
 .total{font-family:var(--titre);font-weight:700;font-size:clamp(40px,6vw,64px);line-height:1;margin:2px 0 4px}
+.lvlimg{height:clamp(96px,16vh,150px);width:auto;filter:drop-shadow(0 6px 10px rgba(0,0,0,.25))}
+.level{font-family:var(--titre);font-weight:700;font-size:clamp(24px,3.4vw,38px);line-height:1.1;margin:-2px 0 6px}
+.total.gp{display:inline-flex;align-items:center;gap:10px;background:#fff;color:var(--anthracite);border-radius:999px;padding:6px 22px 6px 14px;font-size:clamp(28px,4.2vw,46px);margin:0 auto 8px}
+.total.gp img{height:.95em;width:auto}
+.total.gp small{font-size:.42em;font-weight:700;opacity:.85;margin-top:.25em}
 #result h1{font-size:clamp(15px,2vw,22px);font-weight:600;line-height:1.3;max-width:none;opacity:.95}
 .detailhead{font-family:var(--titre);font-weight:700;font-size:clamp(13px,1.6vw,15px);opacity:.85;margin:2px 4px 4px}
 #resStats{gap:4px;padding:8px 12px;background:rgba(255,255,255,.14)}
@@ -302,10 +307,11 @@ button.pill.light{background:#fff;color:var(--anthracite)}
 </div>
 <div id="result" class="overlay hidden">
   <div class="impact">
-    <img class="helmet small" src="assets/brand/gm/liberto-casque.png" alt="">
-    <p class="kicker">Ce trajet</p>
+    <img class="lvlimg" id="resLvlImg" src="assets/brand/gm/levels/liberto-recrue.svg" alt="">
+    <p class="kicker">Ton niveau</p>
+    <div class="level" id="resLevel">Nouvelle recrue</div>
+    <div class="total gp" id="resTotal"><img src="assets/brand/gm/greenpoints.svg" alt=""><span id="resPtsNum">0</span><small>GreenPoints</small></div>
     <h1 id="resTitle">Tu as protégé 1 200 motards avec tes alertes !</h1>
-    <div class="total" id="resTotal"></div>
     <div class="badgebox hidden" id="resBadge"><img id="resBadgeImg" src="" alt=""><div><b id="resBadgeTitle"></b><span id="resBadgeText"></span></div></div>
     <div class="board"><h2>Classement Green Master</h2><ol id="board"></ol></div>
     <button class="wheelcta" id="wheelBtn"><span class="ico">🎁</span><span><b>Tourne la roue Liberty Rider</b><small>Un cadeau à gagner, un seul tour par partie</small></span></button>
@@ -1808,7 +1814,11 @@ function showResult(){resultShown=true;document.getElementById('rotate').classLi
     ['assets/brand/icons/prevention-dark.png','Arrivée en '+fmtTime(P.time),(P.crashes===0?'Bonus zéro chute +100 · ':'')+'bonus efficacité +'+P.timeBonus,'+ '+((P.crashes===0?100:0)+P.timeBonus)+' pts']
   ];
   document.getElementById('resStats').innerHTML='<div class="detailhead">Le détail de tes points</div>'+rows.map(r=>'<div class="srow"><div class="ic"><img src="'+r[0]+'" alt=""></div><div><b>'+r[1]+'</b><span>'+r[2]+'</span></div><div class="pts">'+r[3]+'</div></div>').join('');
-  document.getElementById('resTotal').textContent=P.points+' pts';
+  document.getElementById('resPtsNum').textContent=P.points.toLocaleString('fr-FR');
+  // niveau selon la part des points possibles (dangers × 50 + Flooz × 5), comme les niveaux Green Master de l'app
+  {const maxPts=Math.max(1,hazards.length*50+coins.length*5),lv=P.points/maxPts;
+   const L=lv<0.2?['recrue','Nouvelle recrue']:lv<0.4?['routard','Routard']:lv<0.6?['globetrotter','Globe-Trotter']:lv<0.8?['veteran','Vétéran de la route']:['greenmaster','GreenMaster'];
+   document.getElementById('resLvlImg').src='assets/brand/gm/levels/liberto-'+L[0]+'.svg';document.getElementById('resLevel').textContent=L[1];}
   // classement du stand (localStorage)
   const all=loadBoard();
   const entry={name:playerName,email:playerEmail,contest:consentContest,marketing:consentMarketing,team:teamMode,guest:guestMode,pts:P.points,reports:P.reports,total,crashes:P.crashes,time:Math.round(P.time),date:new Date().toISOString(),id:Date.now()+Math.random()};

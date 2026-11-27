@@ -187,3 +187,9 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 ## Icône Flooz officielle (v51)
 
 - Le bloc jeu-concours de l'accueil affiche l'icône Flooz officielle (composant « flooz » du fichier Figma Liberty Rider – Product 2026, exporté en SVG via Figma dans Chrome, le connecteur Figma étant limité) à la place de l'icône moto.
+
+## Écran de résultat : niveau Liberto et GreenPoints (v52)
+
+- Les cinq illustrations de niveau du Figma Product 2026 (page « GM Classement Lot 2 », cadre « À exporter pour les devs ») : Nouvelle recrue, Routard, Globe-Trotter, Vétéran de la route, GreenMaster (Liberto super-héros à la cape). Export SVG via Figma dans Chrome, découpé en cinq fichiers `assets/brand/gm/levels/`.
+- Le niveau dépend de la part des points possibles sur le parcours (dangers × 50 + Flooz × 5) : moins de 20 % recrue, 40 % routard, 60 % globe-trotter, 80 % vétéran, au-delà GreenMaster. L'illustration et le nom s'affichent en tête du résultat.
+- Les points sont affichés dans une pastille blanche avec l'icône GreenPoints officielle (casque vert #37A67E, export SVG du même fichier), « 250 GreenPoints ».
