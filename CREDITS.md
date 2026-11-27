@@ -177,3 +177,7 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 - Les concurrents ne freinent plus du tout : ils changent de voie (d'autant plus vite qu'une voiture est proche) et gardent leur rythme. Seul le joueur freine.
 - Crissement de frein des concurrents : très léger (volume 0,07 à 0,13 selon la distance, au plus une fois toutes les 5 s par concurrent) quand un concurrent proche lève le pied franchement. Le nôtre reste nettement devant.
 - (v47) Mécanique : les concurrents freinent légèrement derrière une voiture seulement quand aucune voie n'est libre (à moins de 6 longueurs), pour éviter le carambolage ; sinon ils gardent leur rythme.
+
+## Feux stop (v48)
+
+- Chaque moto (joueur et concurrents) a un feu stop à l'arrière : rouge sombre éteint, rouge vif avec un halo quand elle freine. Le nôtre s'allume avec le frein (et le crissement), ceux des concurrents quand ils lèvent le pied ou freinent.

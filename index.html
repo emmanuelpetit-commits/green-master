@@ -927,6 +927,7 @@ function updateRival(r,dt){
   // léger crissement quand un concurrent proche lève le pied franchement (bien plus discret que le nôtre)
   r.brakeCd=(r.brakeCd||0)-dt;
   if(state==='race'&&r.speed>target+maxSpeed*0.12&&r.speed>maxSpeed*0.4&&r.brakeCd<=0&&Math.abs(dz)<segLen*30){r.brakeCd=5;if(AC&&!muted&&sfxBuf.brake)playBuf('brake',0.07+(1-Math.abs(dz)/(segLen*30))*0.06,0.95+R()*0.15);}
+  r.braking=state==='race'&&r.speed>target+maxSpeed*0.03&&r.speed>maxSpeed*0.15;
   r.speed=r.speed<target?Math.min(target,r.speed+accel*0.9*dt):Math.max(target,r.speed-maxSpeed*0.6*dt);
   if(state==='countdown')return;
   // choix de voie : chaque voie reçoit un score selon ce qu'il y a devant (voitures, concurrents, joueur, dangers) ; on prend la meilleure, en préférant rester dans la sienne
@@ -1233,8 +1234,19 @@ function makeBike(color,jacket,helmet,isPlayer){
   root.add(bike);
   const bm=[];bike.traverse(o=>{if(o.isMesh)bm.push(o);});bm.forEach(o=>{if(!o.geometry.attributes.normal)o.geometry.computeVertexNormals();const map=o.material.map;o.material=new THREE.MeshToonMaterial({map,gradientMap:toonGrad,side:THREE.DoubleSide});const edges=new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry,28),new THREE.LineBasicMaterial({color:0x242121}));o.add(edges);});
   // tout le monde est un Liberto : le joueur en Ambre, les rivaux aux couleurs de la charte
-  const lib=makeLiberto('B',isPlayer?'#F5B72B':color,isPlayer?2048:1024);lib.scale.setScalar(1.15);lib.position.set(0,0.72,0.26);lib.rotation.x=0.1;root.add(lib);root.userData.liberto=lib;root.userData.bike=bike;return root;
+  const lib=makeLiberto('B',isPlayer?'#F5B72B':color,isPlayer?2048:1024);lib.scale.setScalar(1.15);lib.position.set(0,0.72,0.26);lib.rotation.x=0.1;root.add(lib);root.userData.liberto=lib;root.userData.bike=bike;
+  // feu stop à l'arrière : rouge sombre éteint, rouge vif + halo quand on freine
+  const bb=new THREE.Box3().setFromObject(bike);
+  const lamp=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.09,0.05),new THREE.MeshBasicMaterial({color:0x5a0c0c}));
+  lamp.position.set(0,bb.min.y+(bb.max.y-bb.min.y)*0.42,bb.max.z-0.03);root.add(lamp);
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTexture(),color:0xff2a2a,transparent:true,depthWrite:false,opacity:0.85}));
+  glow.scale.set(0.9,0.6,1);glow.position.copy(lamp.position).add(new THREE.Vector3(0,0,0.06));glow.visible=false;root.add(glow);
+  root.userData.brake={lamp,glow,on:false};
+  return root;
 }
+let _glowTex=null;
+function glowTexture(){if(_glowTex)return _glowTex;const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');const gr=g.createRadialGradient(64,64,4,64,64,64);gr.addColorStop(0,'rgba(255,80,80,1)');gr.addColorStop(0.35,'rgba(255,40,40,0.55)');gr.addColorStop(1,'rgba(255,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,128,128);_glowTex=new THREE.CanvasTexture(c);return _glowTex;}
+function setBrakeLight(root,on){const b=root&&root.userData.brake;if(!b||b.on===on)return;b.on=on;b.lamp.material.color.set(on?0xff2020:0x5a0c0c);b.glow.visible=on;}
 function animateRider(root,e){if(root.userData.liberto)animateLiberto(root.userData.liberto,e);else setRiderPose(root.userData.rider,e);}
 function makeCar(kind){const m=MODELS['car-'+kind].clone();m.scale.setScalar(1.05);const wheels=[];m.traverse(o=>{if(o.name&&o.name.startsWith('wheel'))wheels.push(o);});m.userData.wheels=wheels;return m;}
 const pools=new Map();
@@ -1608,7 +1620,7 @@ function render3D(){
     if(e.type==='rival'){
       if(e.crashed){e.obj.rotation.set(0,yaw+e.crashDir*0.6,e.crashDir*1.35);e.obj.position.y=ey+0.25;}
       else{e.obj.rotation.set(0,yaw-e.lean*0.3,-e.lean*1.1);}
-      animateRider(e.obj,e);
+      animateRider(e.obj,e);setBrakeLight(e.obj,!!e.braking&&!e.crashed);
     }else{e.obj.rotation.set(0,yaw+Math.PI,0);if(e.obj.userData.wheels)for(const w of e.obj.userData.wheels)w.rotation.x-=e.speed*SC*frameDt/0.32;}
   }
   // dangers
@@ -1658,6 +1670,7 @@ function render3D(){
   if(P.crashed)playerObj.rotation.set(0,P.crashDir*0.7,P.crashDir*1.35);
   else playerObj.rotation.set(0,-P.lean*0.25,-P.lean*1.15+wob);
   animateRider(playerObj,{animT:P.animT,anim:P.anim});
+  setBrakeLight(playerObj,keys.down&&!P.crashed&&P.speed>maxSpeed*0.03&&state==='race');
   // camera
   const shx=P.shake>0?(R()-0.5)*P.shake*0.08:0,shy=P.shake>0?(R()-0.5)*P.shake*0.05:0;
   const camY=playerY+3.3-0.4*sp;
