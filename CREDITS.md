@@ -183,3 +183,7 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 - Chaque moto (joueur et concurrents) a un feu stop à l'arrière : rouge sombre éteint, rouge vif avec un halo quand elle freine. Le nôtre s'allume avec le frein (et le crissement), ceux des concurrents quand ils lèvent le pied ou freinent.
 - (v49) Notre feu stop s'allume dès qu'on lâche l'accélérateur (frein moteur), pas seulement sur le frein ; le crissement reste réservé au vrai coup de frein.
 - (v50) Lâcher l'accélérateur compte comme freiner : feu stop allumé et crissement au moment où on lâche (à plus de 35 % de la vitesse), comme sur le frein.
+
+## Icône Flooz officielle (v51)
+
+- Le bloc jeu-concours de l'accueil affiche l'icône Flooz officielle (composant « flooz » du fichier Figma Liberty Rider – Product 2026, exporté en SVG via Figma dans Chrome, le connecteur Figma étant limité) à la place de l'icône moto.
