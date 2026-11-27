@@ -1670,7 +1670,7 @@ function render3D(){
   if(P.crashed)playerObj.rotation.set(0,P.crashDir*0.7,P.crashDir*1.35);
   else playerObj.rotation.set(0,-P.lean*0.25,-P.lean*1.15+wob);
   animateRider(playerObj,{animT:P.animT,anim:P.anim});
-  setBrakeLight(playerObj,keys.down&&!P.crashed&&P.speed>maxSpeed*0.03&&state==='race');
+  setBrakeLight(playerObj,(keys.down||!keys.up)&&!P.crashed&&P.speed>maxSpeed*0.03&&state==='race');   // allumé dès qu'on lâche l'accélérateur (frein moteur) ou qu'on freine
   // camera
   const shx=P.shake>0?(R()-0.5)*P.shake*0.08:0,shy=P.shake>0?(R()-0.5)*P.shake*0.05:0;
   const camY=playerY+3.3-0.4*sp;

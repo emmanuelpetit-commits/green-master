@@ -181,3 +181,4 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 ## Feux stop (v48)
 
 - Chaque moto (joueur et concurrents) a un feu stop à l'arrière : rouge sombre éteint, rouge vif avec un halo quand elle freine. Le nôtre s'allume avec le frein (et le crissement), ceux des concurrents quand ils lèvent le pied ou freinent.
+- (v49) Notre feu stop s'allume dès qu'on lâche l'accélérateur (frein moteur), pas seulement sur le frein ; le crissement reste réservé au vrai coup de frein.
