@@ -171,3 +171,8 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 
 - Les concurrents ne freinent plus derrière le joueur ni derrière un autre motard sauf s'il est collé : ils ne freinent que derrière une voiture. Une voie n'est « interdite » que si quelqu'un est vraiment à côté. Ils reprennent donc leurs dépassements.
 - Crissement de frein : « Vehicles, Brake, Car, Tire Squeal, Brake Skid 01 » (Epidemic Sound, fourni par Emmanuel) joué au coup de frein au-dessus de 35 % de la vitesse, volume et hauteur selon la vitesse, au plus une fois par 1,5 s.
+
+## Concurrents sans freinage, crissement discret (v46)
+
+- Les concurrents ne freinent plus du tout : ils changent de voie (d'autant plus vite qu'une voiture est proche) et gardent leur rythme. Seul le joueur freine.
+- Crissement de frein des concurrents : très léger (volume 0,07 à 0,13 selon la distance, au plus une fois toutes les 5 s par concurrent) quand un concurrent proche lève le pied franchement. Le nôtre reste nettement devant.

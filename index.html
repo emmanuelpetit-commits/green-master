@@ -924,6 +924,9 @@ function updateRival(r,dt){
   }
   if(Math.abs(r.offset)>1)target=Math.min(target,offLimit*1.6);
   if(state!=='race'&&state!=='finished')target=0;
+  // léger crissement quand un concurrent proche lève le pied franchement (bien plus discret que le nôtre)
+  r.brakeCd=(r.brakeCd||0)-dt;
+  if(state==='race'&&r.speed>target+maxSpeed*0.12&&r.speed>maxSpeed*0.4&&r.brakeCd<=0&&Math.abs(dz)<segLen*30){r.brakeCd=5;if(AC&&!muted&&sfxBuf.brake)playBuf('brake',0.07+(1-Math.abs(dz)/(segLen*30))*0.06,0.95+R()*0.15);}
   r.speed=r.speed<target?Math.min(target,r.speed+accel*0.9*dt):Math.max(target,r.speed-maxSpeed*0.6*dt);
   if(state==='countdown')return;
   // choix de voie : chaque voie reçoit un score selon ce qu'il y a devant (voitures, concurrents, joueur, dangers) ; on prend la meilleure, en préférant rester dans la sienne
@@ -931,13 +934,12 @@ function updateRival(r,dt){
   if(r.laneT<=0){r.laneT=rand(3,7);r.lane=pick(RIVAL_LANES);}
   if(r.thinkT<=0){r.thinkT=0.25;let best=r.lane,bestS=Infinity;for(const l of RIVAL_LANES){const sc=laneScore(r,l,dz)+(l===r.lane?0:6);if(sc<bestS){bestS=sc;best=l;}}r.lane=best;r.boxed=bestS>=40;}
   let desired=r.lane;
-  // freinage si quelque chose de plus lent est juste devant dans la voie visée
-  let nearest=segLen*10,slow=null;
-  for(const o of ents){if(o===r||o.crashed)continue;const d=wrapDelta(o.z-r.z);const lim=o.type==='car'?segLen*10:segLen*2.5;if(d>0&&d<Math.min(nearest,lim)&&o.speed<r.speed&&overlap(desired,r.w,o.offset,o.w,1.2)){nearest=d;slow=o.speed;}}
-  if(slow!==null){r.speed=Math.min(r.speed,Math.max(slow*0.95,maxSpeed*0.3)+(nearest/(segLen*10))*maxSpeed*0.4);}
+  // les concurrents ne freinent jamais : ils changent de voie, d'autant plus vite qu'une voiture est proche
+  let nearest=segLen*12;
+  for(const o of ents){if(o===r||o.type!=='car')continue;const d=wrapDelta(o.z-r.z);if(d>0&&d<nearest&&overlap(r.offset,r.w,o.offset,o.w,1.3))nearest=d;}
   desired=clamp(desired,-0.85,0.85);
   const steer=clamp(desired-r.offset,-1,1);
-  const urgency=slow!==null?1-nearest/(segLen*10):0;
+  const urgency=1-nearest/(segLen*12);
   r.offset+=steer*dt*(0.9+urgency*1.4);
   r.lean=lerp(r.lean,steer*0.3,dt*4);
   const step=dt*r.speed;r.z=increase(r.z,step,trackLen);r.dist+=step;
