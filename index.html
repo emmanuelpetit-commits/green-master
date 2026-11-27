@@ -470,10 +470,13 @@ function buildTrack(){
     if(rnd()<0.35)segments[n+1].sprites.push({type:pick(['bush','bush','rock']),offset:pick([-1,1])*rand(1.25,1.6)});
     if(rnd()<0.12){for(let k=0;k<3;k++)segments[Math.min(n+2+k,segments.length-11)].sprites.push({type:pick(far),offset:side*rand(2.5,6)});}
   }
-  for(let n=150;n<segments.length-200;n+=randInt(90,220)){
-    const bb=rnd()<0.7;
-    segments[n].sprites.push({type:bb?'billboard':'sign',offset:pick([-1.45,1.45])});
-  }
+  // panneaux publicitaires : chaque partenaire une seule fois, Liberty Rider sur les autres, répartis sur tout le parcours
+  {const brands=[...PARTNERS.map(p=>p.key),'liberty','liberty','liberty'];
+   for(let i=brands.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[brands[i],brands[j]]=[brands[j],brands[i]];}
+   brands.unshift('liberty');
+   const first=150,last=segments.length-220,step=(last-first)/(brands.length-1);
+   brands.forEach((brand,i)=>{const n=Math.round(first+i*step+rand(-20,20));segments[n].sprites.push({type:'billboard',offset:pick([-1.45,1.45]),brand});});}
+  for(let n=260;n<segments.length-260;n+=randInt(260,520)){if(!segments[n].sprites.some(s=>s.type==='billboard'))segments[n].sprites.push({type:'sign',offset:pick([-1.45,1.45])});}
   segments[12].sprites.push({type:'start',offset:0});
   segments[segments.length-4].sprites.push({type:'finish',offset:0});
   placeHazards();
@@ -674,7 +677,7 @@ function reset(){wheelState={rot:0,spinning:false,done:false,result:-1,lastIdx:-
 
 /* ---------- messages / audio ---------- */
 function msg(text,color,size){msgs.push({text,color:color||'#fff',size:size||40,t:1.4});if(msgs.length>3)msgs.shift();}
-let AC=null,muted=false,master=null;
+let AC=null,muted=new URLSearchParams(location.search).has('mute'),master=null;   // ?mute=1 : démarre en silence (tests)
 const SFX_FILES={idle:'engine-idle.mp4',drive:'engine-drive.mp3',ping:'ping.mp3',alert:'alert.mp3',cop:'cop.mp3',error:'error.mp3',skid:'skid.mp3',crash:'crash.mp3',horn:'horn.mp3',splash:'splash.mp3',rain:'rain.mp4',beep:'beep.mp3',go:'go.mp3',finish:'finish.mp3'};
 const SFX_GAIN={ping:0.7,alert:0.6,cop:0.6,error:0.5,skid:0.6,crash:0.8,horn:0.5,splash:0.7,beep:0.5,go:0.6,finish:0.7};
 const sfxBuf={};let sfxLoaded=false;
@@ -748,7 +751,7 @@ function updateAudio(){
   const driveG=Math.min(1,Math.max(0,(sp-0.03)/0.25));
   if(loops.drive){
     loops.drive.gain.gain.setTargetAtTime(on?driveG*(throttle?0.75:0.5)*shiftDuck:0,t,0.08);
-    loops.drive.src.playbackRate.setTargetAtTime(0.85+rpm*1.55,t,0.05);
+    loops.drive.src.playbackRate.setTargetAtTime(0.9+rpm*0.9,t,0.05);
     loops.drive.filt.frequency.setTargetAtTime(500+rpm*3500+(throttle?1500:0),t,0.08);
   }
   if(loops.rain)loops.rain.gain.gain.setTargetAtTime(on?rainT*0.5:0,t,0.3);
@@ -760,7 +763,7 @@ function updateAudio(){
     synth.filt.frequency.setTargetAtTime(220+rpm*2600+(throttle?600:0),t,0.08);
     synth.ng.gain.setTargetAtTime(0.02+rpm*0.1,t,0.2);
     const synthG=loops.drive?(0.03+rpm*0.16)*driveG*(throttle?1:0.7)*shiftDuck:0.16+rpm*0.14;
-    synth.mix.gain.setTargetAtTime(on&&sp>0.03?synthG:0,t,0.08);
+    synth.mix.gain.setTargetAtTime(on&&sp>0.03&&!loops.drive?synthG:0,t,0.08);   // couche synthétique coupée tant que l'enregistrement est là (en attente d'un nouveau son)
   }
 }
 function playBuf(k,gain,rate){const s=AC.createBufferSource();s.buffer=sfxBuf[k];if(rate)s.playbackRate.value=rate;const g=AC.createGain();g.gain.value=gain||0.6;s.connect(g);g.connect(master);s.start();}
@@ -1119,9 +1122,13 @@ let assetsReady=false;
 const LR_BRAND={pts:'brand/icons/prevention-light.png',logoWhite:'brand/lr-logo-horizontal-blanc.png',logoRed:'brand/lr-logo-horizontal-couleur.png',logoDark:'brand/lr-logo-horizontal-noir.png'};
 const LR_ICONS={turn:'lr-virage-dangereux.svg',cross:'lr-intersection.svg',pothole:'lr-nid-de-poule.svg',debris:'lr-route-deformee.svg',community:'lr-danger-communautaire.svg',add:'lr-add-danger.svg',fatigue:'lr-fatigue.svg',radar:'lr-radar.svg'};
 const lrImg={};
+// Partenaires affichés une fois chacun sur un panneau au bord de la route (logos blancs du Drive, dossier « logo assurance white »)
+const PARTNERS=[{key:'april',file:'april-moto.png'},{key:'allianz',file:'allianz.png'},{key:'bp',file:'banque-populaire.png'},{key:'ce',file:'caisse-epargne.png'},{key:'groupama',file:'groupama.png'},{key:'axa',file:'axa-passion.png'},{key:'maif',file:'maif.png'},{key:'macif',file:'macif.png'},{key:'matmut',file:'matmut.png'},{key:'mdm',file:'mutuelle-des-motards.png'},{key:'ima',file:'ima.png',light:true}];
+const partnerImg={};
+function loadPartners(){return Promise.all(PARTNERS.map(p=>new Promise(res=>{const im=new Image();im.onload=()=>{partnerImg[p.key]=im;res();};im.onerror=()=>res();im.src='assets/brand/partners/'+p.file;})));}
 function loadIcon(key){return new Promise(res=>{const im=new Image();im.onload=()=>{lrImg[key]=im;res();};im.onerror=()=>res();im.src='assets/'+(LR_ICONS[key]?'icons/'+LR_ICONS[key]:LR_BRAND[key]);});}
 async function loadAssets(){
-  await Promise.all([...Object.keys(LR_ICONS),...Object.keys(LR_BRAND)].map(loadIcon));
+  await Promise.all([...[...Object.keys(LR_ICONS),...Object.keys(LR_BRAND)].map(loadIcon),loadPartners()]);
   const names=['motorcycle','car-cone',...CAR_KINDS.map(k=>'car-'+k),...Object.values(TREE_SETS).flat().map(k=>'nature-'+k)];
   const res=await Promise.all(names.map(n=>new Promise((ok,err)=>loader.parse(b64buf(MODELS_B64[n]),'assets/models/',ok,err))));
   names.forEach((n,i)=>{const s=res[i].scene;s.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=false;}});MODELS[n]=s;});
@@ -1203,10 +1210,11 @@ const billboardCache=new Map();
 function brandPanelTexture(variant){
   if(billboardCache.has(variant))return billboardCache.get(variant);
   const c=document.createElement('canvas');c.width=1024;c.height=400;const g=c.getContext('2d');
-  const dark=variant==='dark';
+  const partner=PARTNERS.find(p=>p.key===variant);
+  const dark=variant==='dark'||(partner&&!partner.light);
   g.fillStyle=dark?'#242121':'#FAF8F5';g.fillRect(0,0,1024,400);
-  const im=dark?lrImg.logoWhite:lrImg.logoRed;
-  if(im){const w=820,h=w*im.height/im.width;g.drawImage(im,(1024-w)/2,(400-h)/2,w,h);}
+  const im=partner?partnerImg[variant]:(dark?lrImg.logoWhite:lrImg.logoRed);
+  if(im){const sc=Math.min(840/im.width,300/im.height),w=im.width*sc,h=im.height*sc;g.drawImage(im,(1024-w)/2,(400-h)/2,w,h);}
   else{g.fillStyle=dark?'#fff':'#E84C2E';g.font='900 110px system-ui';g.textAlign='center';g.textBaseline='middle';g.fillText('Liberty Rider',512,200);}
   const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=8;billboardCache.set(variant,t);return t;
 }
@@ -1214,7 +1222,7 @@ function makeBillboard(variant){
   const g=new THREE.Group();const post=new THREE.MeshStandardMaterial({color:0x555555});
   for(const s of [-1,1]){const p=new THREE.Mesh(new THREE.BoxGeometry(0.25,4.2,0.25),post);p.position.set(s*2.6,2.1,0);g.add(p);}
   const board=new THREE.Mesh(new THREE.BoxGeometry(7.2,2.8,0.2),[post,post,post,post,new THREE.MeshStandardMaterial({map:brandPanelTexture(variant),roughness:0.55}),post]);board.position.set(0,5.5,0);g.add(board);
-  const frame=new THREE.Mesh(new THREE.BoxGeometry(7.5,3.1,0.12),new THREE.MeshStandardMaterial({color:variant==='dark'?0x3a3a3a:0xe8e4de}));frame.position.set(0,5.5,-0.08);g.add(frame);
+  const frame=new THREE.Mesh(new THREE.BoxGeometry(7.5,3.1,0.12),new THREE.MeshStandardMaterial({color:(variant==='light'||(PARTNERS.find(p=>p.key===variant)||{}).light)?0xe8e4de:0x3a3a3a}));frame.position.set(0,5.5,-0.08);g.add(frame);
   g.traverse(o=>{if(o.isMesh)o.castShadow=true;});return g;
 }
 function checkerTexture(label){
@@ -1237,7 +1245,7 @@ function makeChevron(dir){const g=new THREE.Group();const post=new THREE.MeshSta
 function sceneryFactory(s,segIndex){
   const r=hash(segIndex,s.offset);
   switch(s.type){
-    case 'billboard':{const v=r<0.5?'dark':'light';return {key:'bb|'+v,make:()=>toonify(makeBillboard(v)),scale:1,rot:0};}
+    case 'billboard':{const v=(!s.brand||s.brand==='liberty')?(r<0.5?'dark':'light'):s.brand;return {key:'bb|'+v,make:()=>toonify(makeBillboard(v)),scale:1,rot:0};}
     case 'finish':return {key:'gantry|ARRIVÉE',make:()=>toonify(makeGantry('ARRIVÉE')),scale:1,rot:0};
     case 'start':return {key:'gantry|DÉPART',make:()=>toonify(makeGantry('DÉPART')),scale:1,rot:0};
     case 'chevron':return {key:'chev|'+s.dir,make:()=>toonify(makeChevron(s.dir)),scale:1,rot:0};

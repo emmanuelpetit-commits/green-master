@@ -147,3 +147,9 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 - La boucle de roulage est lue entre 0,85× et 2,4× selon le régime (fondamentale ~30 à 90 Hz), avec un filtre qui s'ouvre aux gaz et se ferme au pied levé. Seule la partie stable de l'enregistrement (16 à 54 s) est bouclée.
 - Une couche synthétique (45 à 230 Hz) monte dans les tours avec le régime : c'est elle qui donne la sensation de « plein fer ».
 - Le ralenti ne joue plus qu'à l'arrêt (sous 10 % de la vitesse).
+
+## Panneaux partenaires au bord de la route, son adouci (v42)
+
+- Chaque partenaire a exactement un panneau publicitaire sur le parcours, dans un ordre tiré au sort à chaque partie : April Moto, Allianz, Banque Populaire, Caisse d'Épargne, Groupama, AXA Passion, MAIF, Macif, Matmut, Mutuelle des Motards, IMA. Les autres panneaux (le premier et trois autres) sont Liberty Rider. Covéa volontairement absent (pas encore partenaire).
+- Logos : fichiers blancs du Drive, dossier « logo assurance white » (Drive partagé Marketing), IMA depuis « logoIMA.png ». Copiés dans `assets/brand/partners/`.
+- Son moteur : en attendant un nouvel enregistrement, la couche synthétique est coupée et la boucle de roulage n'est plus accélérée qu'entre 0,9× et 1,8× (le modèle à 4 rapports reste).
