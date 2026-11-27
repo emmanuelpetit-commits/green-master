@@ -934,9 +934,10 @@ function updateRival(r,dt){
   if(r.laneT<=0){r.laneT=rand(3,7);r.lane=pick(RIVAL_LANES);}
   if(r.thinkT<=0){r.thinkT=0.25;let best=r.lane,bestS=Infinity;for(const l of RIVAL_LANES){const sc=laneScore(r,l,dz)+(l===r.lane?0:6);if(sc<bestS){bestS=sc;best=l;}}r.lane=best;r.boxed=bestS>=40;}
   let desired=r.lane;
-  // les concurrents ne freinent jamais : ils changent de voie, d'autant plus vite qu'une voiture est proche
-  let nearest=segLen*12;
-  for(const o of ents){if(o===r||o.type!=='car')continue;const d=wrapDelta(o.z-r.z);if(d>0&&d<nearest&&overlap(r.offset,r.w,o.offset,o.w,1.3))nearest=d;}
+  // les concurrents changent de voie, d'autant plus vite qu'une voiture est proche ; ils ne freinent que derrière une voiture quand aucune voie n'est libre
+  let nearest=segLen*12,carSpeed=null;
+  for(const o of ents){if(o===r||o.type!=='car')continue;const d=wrapDelta(o.z-r.z);if(d>0&&d<nearest&&overlap(r.offset,r.w,o.offset,o.w,1.3)){nearest=d;carSpeed=o.speed;}}
+  if(r.boxed&&carSpeed!==null&&nearest<segLen*6)r.speed=Math.min(r.speed,Math.max(carSpeed,maxSpeed*0.35)+(nearest/(segLen*6))*maxSpeed*0.35);
   desired=clamp(desired,-0.85,0.85);
   const steer=clamp(desired-r.offset,-1,1);
   const urgency=1-nearest/(segLen*12);
