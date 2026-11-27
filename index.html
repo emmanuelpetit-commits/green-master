@@ -842,10 +842,13 @@ function updatePlayer(dt){
     P.lean=lerp(P.lean,steer*0.28*(0.4+sp)-seg.curve*sp*0.03,dt*6);
     if(state==='finished')P.speed+=decel*2*dt;
     else if(keys.up)P.speed+=accel*dt;
-    else if(keys.down){P.speed+=braking*grip*dt;
-      // crissement de freinage : au coup de frein à bonne vitesse, pas plus d'une fois par seconde et demie
-      P.brakeCd=(P.brakeCd||0)-dt;if(sp>0.35&&P.brakeCd<=0&&!P.crashed){P.brakeCd=1.5;if(AC&&!muted&&sfxBuf.brake)playBuf('brake',0.25+sp*0.35,0.9+sp*0.25);}}
+    else if(keys.down)P.speed+=braking*grip*dt;
     else P.speed+=decel*dt;
+    // freiner = lâcher l'accélérateur ou freiner : crissement au moment où on commence, à bonne vitesse, puis au plus une fois par 1,2 s
+    const brk=(keys.down||!keys.up)&&state==='race'&&!P.crashed;
+    P.brakeCd=(P.brakeCd||0)-dt;
+    if(brk&&!P.wasBraking&&sp>0.35&&P.brakeCd<=0){P.brakeCd=1.2;if(AC&&!muted&&sfxBuf.brake)playBuf('brake',0.25+sp*0.35,0.9+sp*0.25);}
+    P.wasBraking=brk;
     if(Math.abs(P.x)>1){
       if(P.speed>offLimit)P.speed+=offDecel*dt;
       P.shake=Math.max(P.shake,sp*2.5);
