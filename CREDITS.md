@@ -193,3 +193,7 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 - Les cinq illustrations de niveau du Figma Product 2026 (page « GM Classement Lot 2 », cadre « À exporter pour les devs ») : Nouvelle recrue, Routard, Globe-Trotter, Vétéran de la route, GreenMaster (Liberto super-héros à la cape). Export SVG via Figma dans Chrome, découpé en cinq fichiers `assets/brand/gm/levels/`.
 - Le niveau dépend de la part des points possibles sur le parcours (dangers × 50 + Flooz × 5) : moins de 20 % recrue, 40 % routard, 60 % globe-trotter, 80 % vétéran, au-delà GreenMaster. L'illustration et le nom s'affichent en tête du résultat.
 - Les points sont affichés dans une pastille blanche avec l'icône GreenPoints officielle (casque vert #37A67E, export SVG du même fichier), « 250 GreenPoints ».
+
+## Illustration Flooz sur l'accueil (v53)
+
+- Le bloc jeu-concours affiche l'illustration officielle des trois pièces Flooz (nœud « Group 17 » du Figma Product 2026, page Centre d'activité), exportée en SVG via Figma dans Chrome (les pièces y sont des images intégrées).
