@@ -166,3 +166,8 @@ Le service worker sert désormais la page index.html en « réseau d'abord » (c
 - Après une chute, le pilote est invulnérable 1,6 s en se relevant (il clignote) : il traverse la voiture ou le danger qui l'a fait tomber, aucun danger ni collision ne compte pendant ce temps.
 - Concurrents : choix de voie par score (voitures, autres concurrents, joueur et dangers devant ; interdiction de se rabattre sur quelqu'un à côté), freinage derrière plus lent, braquage plus vif quand c'est urgent, et 4 fois moins de chutes sur les voitures.
 - Gravillons : nappe de sable claire bordée de sombre, gros cailloux contrastés, sur une seule voie (0,8 largeur de voie) au lieu de toute la route, donc évitable ; glissade (vitesse −25 %, −10 PV) au-dessus de 45 % de la vitesse, chute seulement à plus de 75 % dans un virage serré.
+
+## Concurrents qui dépassent, bruit de frein (v45)
+
+- Les concurrents ne freinent plus derrière le joueur ni derrière un autre motard sauf s'il est collé : ils ne freinent que derrière une voiture. Une voie n'est « interdite » que si quelqu'un est vraiment à côté. Ils reprennent donc leurs dépassements.
+- Crissement de frein : « Vehicles, Brake, Car, Tire Squeal, Brake Skid 01 » (Epidemic Sound, fourni par Emmanuel) joué au coup de frein au-dessus de 35 % de la vitesse, volume et hauteur selon la vitesse, au plus une fois par 1,5 s.

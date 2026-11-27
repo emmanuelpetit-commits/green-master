@@ -11,7 +11,8 @@ retombe sur ses sons synthétiques pour les autres. Fichiers officiels télécha
 | alert.mp3 | alerte communautaire | User Interface, Alert, Notifications, Notification, Ping, Gentle | 8a7d530f-08e5-40d6-a970-cacf26b52c10 |
 | cop.mp3 | alerte copilote | User Interface, Alert, Warnings, Alert, Suggestion | bfdd24b9-77cc-48f8-b8a5-84dc4dd4f089 |
 | error.mp3 | faux signalement | User Interface, Alert, Buzz, Funny, Wrong Answer | b0f11b27-abae-4de2-b5ac-f13b9c4f45e0 |
-| skid.mp3 | glissade, freinage | Vehicles, Brake, Car, Tire Squeal, Brake Skid 03 | 353bbd52-27b5-4d42-bc2a-e77c6c84cc14 |
+| brake.mp3 | coup de frein à bonne vitesse | Vehicles, Brake, Car, Tire Squeal, Brake Skid 01 | (fichier fourni par Emmanuel, 27/11/2026) |
+| skid.mp3 | glissade | Vehicles, Brake, Car, Tire Squeal, Brake Skid 03 | 353bbd52-27b5-4d42-bc2a-e77c6c84cc14 |
 | crash.mp3 | chute, collision | Metal, Crash & Debris, Abandoned Vehicle, Car Wreck, Throw Rim On Multiple Cars | 103bbcb6-77a9-46b2-9520-a53b397abc3c |
 | horn.mp3 | accrochage avec une voiture | Vehicles, Horn, Car, Horn Beep, Short Blast | 6937f252-3fdb-4de9-b0cd-8fdbfe67a794 |
 | splash.mp3 | flaque d'eau | Water, Splash, Rock Thrown In Puddle | d9ab78f4-bbf6-4514-887a-309430a4ba73 |
